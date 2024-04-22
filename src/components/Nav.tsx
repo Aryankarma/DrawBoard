@@ -1,9 +1,9 @@
-import React from "react";
+import {useState} from "react";
 import { useKeycloak } from "@react-keycloak/web";
 
 const Nav = () => {
   const { keycloak } = useKeycloak();
-
+ 
   return (
     <div className="container-fluid">
       <div className="row">
@@ -27,22 +27,11 @@ const Nav = () => {
               >
                 <span className="navbar-toggler-icon"></span>
               </button>
+
               <div
                 className="collapse navbar-collapse mk-auto"
                 id="navbarSupportedContent"
               >
-                {/* <ul className="mx-auto navbar-nav ms-auto mb-2 mb-lg-0 font-semibold font-heading">
-                  <li className="nav-item">
-                    <a className="nav-link active" aria-current="page" href="/">
-                      Home
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a className="nav-link" href="/secured">
-                      Secured Page
-                    </a>
-                  </li>
-                </ul> */}
                 {!keycloak.authenticated ? (
                   <button
                     type="button"

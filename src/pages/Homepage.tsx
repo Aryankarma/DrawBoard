@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useKeycloak } from "@react-keycloak/web";
+import Nav from '../components/Nav';
 
 const Home = () => {
 
@@ -9,7 +10,7 @@ const Home = () => {
   const isLoggedIn = keycloak.authenticated;
 
   useEffect(()=>{
-    console.log(isLoggedIn)
+    // console.log(isLoggedIn)
     if(isLoggedIn){
       navigate("/secured")
     }

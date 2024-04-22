@@ -16,8 +16,15 @@ function App() {
       <BrowserRouter>
         <Nav />
         <Routes>
+          
           <Route path="/" element={<WelcomePage />} />
-          <Route path="/secured" element={<PrivateRoute><SecuredPage /></PrivateRoute>} />
+          
+          <Route path="/secured" element={
+            <PrivateRoute>
+              <SecuredPage />
+            </PrivateRoute>
+          } />
+
         </Routes>
       </BrowserRouter>
     </ReactKeycloakProvider>

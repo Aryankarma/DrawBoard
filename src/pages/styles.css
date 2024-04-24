@@ -1,0 +1,48 @@
+.tagContainer{
+    height: auto;
+    width: auto;
+    display: flex;
+}
+
+.checkTag{
+    /* display: none; */
+    background-color: initial;
+    appearance: none;
+    box-sizing: border-box;
+    padding: 1.2rem;
+    border: initial;
+    /* height: 100%; */
+    /* width: ; */
+    position: absolute;
+    z-index: 2;
+}
+
+.thisislabel{
+    font-size: 14px;
+    color: black;    /* background-color: ; */
+    font-weight: 600;
+    padding: .5rem 1rem;
+    border-radius: 10px;
+    margin: 0 5px;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.checkTag:hover + .thisislabel{
+    /* background: rgb(111, 164, 237); */
+    background: hsl(216, 93%, 26%);
+    opacity: 0.5;
+    transition: 300ms ease-in-out;
+}
+.boxcontainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+input[type="radio"]:checked + label {
+    /* background-color: hsl(216, 93%, 26%) !important; */
+    background-color: rgb(111, 164, 237) !important;
+    color: black;
+    box-shadow: 0 0 10px black !important;
+}

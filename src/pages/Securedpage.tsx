@@ -28,7 +28,10 @@ const Secured = () => {
   const [pathdataHistory, setPathdataHistory] = useState<number[][][]>([]);
   const [brushDown, setbrushDown] = useState(false);
   const [onBoard, setOnBoard] = useState(false);
-
+  
+  const [elementpathdata, setelementpathdata] = useState<number[][]>([]);
+  const [elementpathdataHistory, setelementPathdataHistory] = useState<number[][][]>([]);
+  
   const [contextData, setContextData] = useState<string[][]>([]);
   const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0)
@@ -113,20 +116,22 @@ const Secured = () => {
 
   let prevsave1 = 0, prevsave2 = 0;
 
-  useEffect(()=>{
-    if(elementName !== "brush" && elementName !== "arrow" && prevsave1 == 0 && onBoard){
-      generateElement(mouseDown[0], mouseDown[1], mouseMove[0], mouseMove[1])
-      prevsave1 = mouseMove[0], prevsave2 = mouseMove[1];
-    }else{
+  // useEffect(()=>{
+  //   if(elementName !== "brush" && elementName !== "arrow" && prevsave1 == 0 && onBoard){
+  //     generateElement(mouseDown[0], mouseDown[1], mouseMove[0], mouseMove[1])
+  //     prevsave1 = mouseMove[0], prevsave2 = mouseMove[1];
+  //   }else{
 
-    }
-  }, [mouseMove])
+  //   }
+  // }, [mouseMove])
 
   useEffect(()=>{
     if(elementName === "brush"){
       generateLinearPath(pathdata)
+    }else{
+      generateElement(mouseDown[0], mouseDown[1], elementpathdata)
     }
-  }, [pathdata])
+  }, [pathdata, elementpathdata])
 
   const shapeOptions: Options = {
     stroke: strokeColor,
@@ -162,7 +167,9 @@ const Secured = () => {
     setCurrentCanvasPointer(0)
     setpathdata([]);
     setPathdataHistory([]);
-
+    setelementpathdata([]);
+    setelementPathdataHistory([]);
+    
     // // if the user is resetting canvas then undo redo won't work.
     // if(!(source == "undo"))
     //   // setContextData([]) 
@@ -179,45 +186,54 @@ const Secured = () => {
     // console.log(elementsCount)
   }
 
-  const generateElement = ( downx: number, downy: number, upx: number, upy: number ) => {
+  const generateElement = ( downx: number, downy: number, maindata: number[][] ) => {
 
+    maindata.map((input) => {
+      let upx = input[0]
+      let upy = input[1]
+      
+      // if(prevsave1 != upx || prevsave2 != upy){
+      //   resetCanvas()
+      // }
+  
+      // if(onBoard){
+      //   resetCanvas()
+      // }
 
-    if(prevsave1 != upx || prevsave2 != upy){
-      resetCanvas()
-    }
+      if(!canvasRef.current) return;
+  
+      const roughCanvas = rough.canvas(canvasRef.current);
+      const generator = roughCanvas.generator;
 
-    if(!canvasRef.current) return;
+      let rect1 = generator.rectangle( downx, downy, upx - downx, upy - downy, shapeOptions);
 
-    // let linearPath = generator.linearPath(maindata.map((input) => [input[0], input[1]]), shapeOptions)
-    // roughCanvas.draw(linearPath)
+      let line1 = generator.line( downx, downy, upx, upy, shapeOptions);
+  
+      let circle1 = generator.circle((downx + upx)/2, (downy + upy)/2 , Math.sqrt(Math.pow(upx - downx, 2) + Math.pow(upy - downy, 2)), shapeOptions);
+  
+      let ellipse1 = generator.ellipse( (downx + upx)/2, (downy + upy)/2, upx - downx, upy - downy, shapeOptions);
+  
+      // let linearPath = generator.linearPath([input[0], input[1]], shapeOptions);
 
-
-    const roughCanvas = rough.canvas(canvasRef.current);
-    const generator = roughCanvas.generator;
-
-    let rect1 = generator.rectangle( downx, downy, upx - downx, upy - downy, shapeOptions);
-    
-    let line1 = generator.line( downx, downy, upx, upy, shapeOptions);
-
-    let circle1 = generator.circle( (downx + upx)/2, (downy + upy)/2 , Math.sqrt(Math.pow(upx - downx, 2) + Math.pow(upy - downy, 2)), shapeOptions);
-
-    let ellipse1 = generator.ellipse( (downx + upx)/2, (downy + upy)/2, upx - downx, upy - downy, shapeOptions);
-
-    let shapeToDraw = ellipse1;
-
-    switch (elementName) {
-      case "line":
-        shapeToDraw = line1;
-        break;
-      case "box":
-        shapeToDraw = rect1;
-        break;
-      case "circle":
-        shapeToDraw = circle1;
-        break;
-    }
-
-    roughCanvas.draw(shapeToDraw);
+      let shapeToDraw = ellipse1;
+  
+      switch (elementName) {
+        case "line":
+          shapeToDraw = line1;
+          break;
+        case "box":
+          shapeToDraw = rect1;
+          break;
+        case "circle":
+          shapeToDraw = circle1;
+          break;
+        // case "brush":
+        //   shapeToDraw = linearPath;
+        //   break;
+      }
+  
+      roughCanvas.draw(shapeToDraw);
+    })
   }
 
   const handleDownload = () => {
@@ -258,8 +274,11 @@ const Secured = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    if(elementName === "brush" && brushDown)
+    if(elementName === "brush" && brushDown){
       setpathdata(prevData => [...prevData, [e.nativeEvent.offsetX, e.nativeEvent.offsetY]]);
+    }else if((elementName == "line" || elementName === "circle" || elementName == "box") && onBoard){
+      setelementpathdata(prevData => [...prevData, [e.nativeEvent.offsetX, e.nativeEvent.offsetY]])
+    }
 
     setMouseMove([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
 
@@ -271,13 +290,17 @@ const Secured = () => {
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     setMouseUp([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
-    setOnBoard(false)
     // console.log(mouseUp[0], mouseUp[1])
-    if(brushDown === true)
+    if(brushDown === true){
       setPathdataHistory(prevHistory => [...prevHistory, pathdata]);
       setpathdata([])
       setbrushDown(false)
       // console.log(pathdataHistory)
+    }else if(onBoard){
+      setelementPathdataHistory(prevHistory => [...prevHistory, elementpathdata])
+      setelementpathdata([])
+    }
+    setOnBoard(false)
 
     // saveCanvasContext()
     // runthisonce()

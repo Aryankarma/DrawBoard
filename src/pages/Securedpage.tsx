@@ -28,12 +28,10 @@ const Secured = () => {
   const [pathdataHistory, setPathdataHistory] = useState<number[][][]>([]);
   const [brushDown, setbrushDown] = useState(false);
   const [onBoard, setOnBoard] = useState(false);
-  // const [elementsCount, setElementsCount] = useState(0)  
 
   const [contextData, setContextData] = useState<string[][]>([]);
+  const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0)
-
-  // console.log(document.getElement)
 
   useEffect(()=>{
     setCurrentCanvasPointer(contextData.length - 1)
@@ -41,7 +39,6 @@ const Secured = () => {
 
   useEffect(()=>{
     // console.log(contextData)
-    // console.log(contextData.length)
   }, [contextData])
 
   const saveCanvasContext = () => {
@@ -90,9 +87,24 @@ const Secured = () => {
     }
   };
 
-  // canvs udpates saving to history
-  useEffect(()=>{
+  const runthisonce = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const dataURL = contextData[contextData.length - 1];
+    const image = new Image();
     
+    image.onload = function() {
+      ctx.drawImage(image, 0, 0);
+    };
+    console.log()
+    image.src = dataURL[0];
+
+    // console.log(image.src)
+    // console.log(contextData[contextData.length - 1])
+  }
+
+  useEffect(()=>{
+
   },[contextData])
 
   useEffect(()=>{
@@ -140,7 +152,7 @@ const Secured = () => {
     zigzagOffset: -1
   }
 
-  const resetCanvas = (source: string) => {
+  const resetCanvas = () => {
     if (canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
@@ -151,9 +163,10 @@ const Secured = () => {
     setpathdata([]);
     setPathdataHistory([]);
 
-    // if the user is resetting canvas then undo redo won't work.
-    if(!(source == "undo"))
-      setContextData([]) 
+    // // if the user is resetting canvas then undo redo won't work.
+    // if(!(source == "undo"))
+    //   // setContextData([]) 
+    // return;
   };
 
   const generateLinearPath = (maindata: number[][]) => {
@@ -170,10 +183,15 @@ const Secured = () => {
 
 
     if(prevsave1 != upx || prevsave2 != upy){
-      resetCanvas("")
+      resetCanvas()
     }
 
     if(!canvasRef.current) return;
+
+    // let linearPath = generator.linearPath(maindata.map((input) => [input[0], input[1]]), shapeOptions)
+    // roughCanvas.draw(linearPath)
+
+
     const roughCanvas = rough.canvas(canvasRef.current);
     const generator = roughCanvas.generator;
 
@@ -225,21 +243,8 @@ const Secured = () => {
       link.download = "whiteboard.png"; // Use PNG for transparent backgrounds (optional)
       link.href = downloadCanvas.toDataURL('image/png'); // Specify PNG format (optional)
       link.click();
-      }
+    }
   }
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if(elementName === "brush" && brushDown)
-      // setstrokeWidth("5")
-      setpathdata(prevData => [...prevData, [e.nativeEvent.offsetX, e.nativeEvent.offsetY]]);
-
-    // console.log(pathdata)
-    setMouseMove([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
-    // if(isDrawing){
-    //   drawLine(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
-    // }
-  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -251,6 +256,18 @@ const Secured = () => {
     // console.log( e.nativeEvent.offsetX, e.nativeEvent.offsetY)
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if(elementName === "brush" && brushDown)
+      setpathdata(prevData => [...prevData, [e.nativeEvent.offsetX, e.nativeEvent.offsetY]]);
+
+    setMouseMove([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
+
+    // if(isDrawing){
+    //   drawLine(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
+    // }
+  };
+
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     setMouseUp([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
@@ -259,14 +276,11 @@ const Secured = () => {
     if(brushDown === true)
       setPathdataHistory(prevHistory => [...prevHistory, pathdata]);
       setpathdata([])
+      setbrushDown(false)
       // console.log(pathdataHistory)
-    setbrushDown(false)
-    saveCanvasContext()
-    // setElementsCount(elementsCount + 1)
-    // console.log(elementsCount)
-    // setstrokeWidth("2")
-    // console.log(mouseUp[0], mouseUp[1])
-    // generateElement(mouseUp[0], mouseUp[1], mouseDown[0], mouseDown[1])
+
+    // saveCanvasContext()
+    // runthisonce()
   };
 
   const tempstyle = {
@@ -330,7 +344,7 @@ const Secured = () => {
         </div>
 
           <div style={{scale:".85"}} >
-            <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvas("")}><GrPowerReset/></button>
+            <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvas()}><GrPowerReset/></button>
             <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}><LuUndo2/></button>
             <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}><LuRedo2/></button>
             <button className="ms-1 me-1 rounded-5" onClick={handleDownload}><FiDownload/></button>
@@ -339,7 +353,7 @@ const Secured = () => {
       </div>
     
       <canvas
-        className="shadow-lg bg-dark mt-3 mb-5 rounded-4"
+        className="shadow-lg bg-dark mt-3 mb-5 rounded-3"
         ref={canvasRef}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}

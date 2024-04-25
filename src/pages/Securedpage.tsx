@@ -2,10 +2,16 @@
 import { useRef, useState, useEffect, createElement } from "react";
 import rough from 'roughjs';
 import { Options } from "roughjs/bin/core";
-import { LuPencil } from "react-icons/lu";
-import { FiMinus, FiMousePointer, FiSquare } from "react-icons/fi";
+import { LuBrush, LuPencil } from "react-icons/lu";
+import { FiDownload, FiMinus, FiMousePointer, FiSquare } from "react-icons/fi";
 import {FaRegCircle} from 'react-icons/fa6'
+import { GrPowerReset } from "react-icons/gr";
+import { LuUndo2 } from "react-icons/lu";
+import { LuRedo2 } from "react-icons/lu";
+import { MdDownload } from "react-icons/md";
 import "./styles.css"
+import { FaPaintBrush } from "react-icons/fa";
+import { IoColorPaletteOutline } from "react-icons/io5";
 
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -115,20 +121,20 @@ const Secured = () => {
     strokeWidth: Number(strokeWidth),
     // fill: fillColor + "40",
     roughness: 1,
-    curveStepCount: 9,
+    curveStepCount: 99,
     bowing: 1,
-    curveFitting: 0.95,
-    curveTightness: 0,
+    curveFitting: .99,
+    curveTightness: .8,
     dashGap: -1,
     dashOffset: -1,
-    disableMultiStroke: false,
+    disableMultiStroke: true,
     disableMultiStrokeFill: false,
-    fillShapeRoughnessGain: 0.8,
+    fillShapeRoughnessGain: 10,
     fillStyle: "solid",
     fillWeight: -1,
     hachureAngle: -41,
     hachureGap: -1,
-    maxRandomnessOffset: 2,
+    maxRandomnessOffset: 3,
     preserveVertices: false,
     seed: 0,
     zigzagOffset: -1
@@ -208,7 +214,7 @@ const Secured = () => {
       const downloadCtx = downloadCanvas.getContext('2d');
   
       // Fill the new canvas with black background
-      downloadCtx.fillStyle = '#151515';
+      downloadCtx.fillStyle = '#212529';
       downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
   
       // Draw the existing content onto the new canvas with black background
@@ -295,7 +301,7 @@ const Secured = () => {
 
             <div className="boxcontainer">
               <input name="element" className="checkTag" id="brush" type="radio" onClick={() => setElement("brush")} />
-              <label style={{backgroundColor:"rgb(213, 230, 253)"}} className="thisislabel" htmlFor="brush"> <LuPencil/> </label>
+              <label style={{backgroundColor:"rgb(213, 230, 253)"}} className="thisislabel" htmlFor="brush"> <LuBrush/> </label>
             </div>
 
             <div className="boxcontainer">
@@ -318,28 +324,28 @@ const Secured = () => {
           {/* <label htmlFor="color">Fill Color: </label>
           <input type="color" name="fillcolor" id="fillcolor" value={fillColor} onChange={(e)=> setfillColor(e.target.value)} /> */}
 
-          <label htmlFor="range">Brush Size: </label>
-          <input type="range" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} />
-
-          <div style={{gap:"30px", scale:".8"}}>
-            <button onClick={()=>resetCanvas("")}>Reset Canvas</button>
-
-            <button onClick={undoCanvasContext}>Undo</button>
-            <button onClick={redoCanvasContext}>Redo</button>
-            <button onClick={handleDownload}>Down</button>
-          </div>
+          <label htmlFor="range">Size: </label>
+          <input style={{width:"7rem"}} type="range" className="form-range" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} />
+          {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
         </div>
+
+          <div style={{scale:".85"}} >
+            <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvas("")}><GrPowerReset/></button>
+            <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}><LuUndo2/></button>
+            <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}><LuRedo2/></button>
+            <button className="ms-1 me-1 rounded-5" onClick={handleDownload}><FiDownload/></button>
+          </div>
 
       </div>
     
       <canvas
-        className="border border-light border-3"
+        className="shadow-lg bg-dark mt-3 mb-5 rounded-4"
         ref={canvasRef}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         width={window.innerWidth - 100}
-        height={window.innerHeight - 150}
+        height={window.innerHeight - 175}
       />
     </div>
     

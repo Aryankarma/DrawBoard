@@ -38,8 +38,11 @@ const Secured = () => {
   }, [contextData])
 
   useEffect(()=>{
-    // console.log(contextData)
+    console.log("contextData ", contextData)
   }, [contextData])
+  // useEffect(()=>{
+  //   console.log('onBoard', onBoard)
+  // }, [onBoard])
 
   const saveCanvasContext = () => {
     if (canvasRef.current) {
@@ -61,10 +64,10 @@ const Secured = () => {
         };
         console.log("currentCanvasPointer when undo ", currentCanvasPointer)
         if(currentCanvasPointer == 0){
-          resetCanvas("undo")
+          resetCanvas()
           return;
         }
-        image.src = contextData[currentCanvasPointer - 1][0];
+        image.src = contextData[currentCanvasPointer - 1];
         setCurrentCanvasPointer(currentCanvasPointer - 1)
      }
     }
@@ -103,13 +106,13 @@ const Secured = () => {
     // console.log(contextData[contextData.length - 1])
   }
 
-  useEffect(()=>{
+  // useEffect(()=>{
+  //   console.log(pathdata)
+  // },[pathdata])
 
-  },[contextData])
-
-  useEffect(()=>{
-    // console.log(onBoard)
-  },[onBoard])
+  // useEffect(()=>{
+  //   console.log(pathdataHistory)
+  // },[pathdataHistory])
 
   let prevsave1 = 0, prevsave2 = 0;
 
@@ -252,13 +255,14 @@ const Secured = () => {
     setOnBoard(true)
     if(elementName === "brush")
       setbrushDown(true)
+      // setPathdataHistory(prevData => [...prevData, []])
     // console.log(mouseDown[0], mouseDown[1])
     // console.log( e.nativeEvent.offsetX, e.nativeEvent.offsetY)
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    if(elementName === "brush" && brushDown)
+    if(elementName === "brush" && brushDown) // the brush is down & drawing
       setpathdata(prevData => [...prevData, [e.nativeEvent.offsetX, e.nativeEvent.offsetY]]);
 
     setMouseMove([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
@@ -272,8 +276,9 @@ const Secured = () => {
     e.preventDefault();
     setMouseUp([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
     setOnBoard(false)
-    // console.log(mouseUp[0], mouseUp[1])
-    if(brushDown === true)
+    saveCanvasContext()
+
+    if(brushDown === true) // mouse has completed drawing with the brush
       setPathdataHistory(prevHistory => [...prevHistory, pathdata]);
       setpathdata([])
       setbrushDown(false)

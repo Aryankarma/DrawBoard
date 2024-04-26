@@ -48,7 +48,7 @@ const Secured = () => {
     if (canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
-        setContextData(prevdata => [...prevdata, [canvasRef.current.toDataURL()]]);
+        setContextData(prevdata => [...prevdata, [canvasRef.current!.toDataURL()]]);
       }
     }
   };
@@ -91,8 +91,11 @@ const Secured = () => {
   };
 
   const runthisonce = () => {
-    const canvas = canvasRef.current;
+    const canvas = canvasRef.current as HTMLCanvasElement;
     const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+    
     const dataURL = contextData[contextData.length - 1];
     const image = new Image();
     
@@ -204,7 +207,7 @@ const Secured = () => {
   
       const roughCanvas = rough.canvas(canvasRef.current);
       const generator = roughCanvas.generator;
-
+      
       let rect1 = generator.rectangle( downx, downy, upx - downx, upy - downy, shapeOptions);
 
       let line1 = generator.line( downx, downy, upx, upy, shapeOptions);
@@ -239,7 +242,9 @@ const Secured = () => {
   const handleDownload = () => {
     if(canvasRef.current){
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+      // const ctx = canvas.getContext('2d');
+
+      // if (!ctx) 
   
       // Create a new canvas with a black background
       const downloadCanvas = document.createElement('canvas');
@@ -248,11 +253,11 @@ const Secured = () => {
       const downloadCtx = downloadCanvas.getContext('2d');
   
       // Fill the new canvas with black background
-      downloadCtx.fillStyle = '#212529';
-      downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
+      downloadCtx!.fillStyle = '#212529';
+      downloadCtx!.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
   
       // Draw the existing content onto the new canvas with black background
-      downloadCtx.drawImage(canvas, 0, 0);
+      downloadCtx!.drawImage(canvas, 0, 0);
   
       // Download the new canvas with black background
       const link = document.createElement("a");

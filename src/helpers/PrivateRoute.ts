@@ -10,11 +10,11 @@ const PrivateRoute: React.FC<{children: ReactNode}> = ({ children }) => {
     
     const navigate = useNavigate();
     
-    // useEffect(() => {
-    //     if (isLoggedIn == false) {
-    //         navigate("/");
-    //     }
-    // }, [isLoggedIn]);
+    useEffect(() => {
+        if (isLoggedIn == false) {
+            navigate("/");
+        }
+    }, [isLoggedIn]);
 
     return children
 };

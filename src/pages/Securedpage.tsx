@@ -30,7 +30,7 @@ const Secured = () => {
   const [onBoard, setOnBoard] = useState(false);
 
   const [contextData, setContextData] = useState<string[][]>([]);
-  const [tempcontext, settempcontext] = useState<string[]>([]);
+  const [tempcontext, sjettempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0)
 
   useEffect(()=>{
@@ -50,6 +50,18 @@ const Secured = () => {
     }
   };
 
+  const runthisonce = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const dataURL = contextData[contextData.length - 1];
+    const image = new Image();
+    
+    image.onload = function() {
+      ctx.drawImage(image, 0, 0);
+    };
+    image.src = dataURL;
+  }
+
   const undoCanvasContext = () => {
     if (canvasRef.current && contextData){  
       const context = canvasRef.current.getContext('2d');
@@ -61,10 +73,10 @@ const Secured = () => {
         };
         console.log("currentCanvasPointer when undo ", currentCanvasPointer)
         if(currentCanvasPointer == 0){
-          resetCanvas("undo")
+          resetCanvas()
           return;
         }
-        image.src = contextData[currentCanvasPointer - 1][0];
+        image.src = contextData2[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1)
      }
     }
@@ -87,28 +99,13 @@ const Secured = () => {
     }
   };
 
-  const runthisonce = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const dataURL = contextData[contextData.length - 1];
-    const image = new Image();
-    
-    image.onload = function() {
-      ctx.drawImage(image, 0, 0);
-    };
-    console.log()
-    image.src = dataURL[0];
-
-    // console.log(image.src)
-    // console.log(contextData[contextData.length - 1])
-  }
-
   useEffect(()=>{
 
   },[contextData])
 
   useEffect(()=>{
-    // console.log(onBoard)
+      saveCanvasContext()
+      runthisonce()
   },[onBoard])
 
   let prevsave1 = 0, prevsave2 = 0;
@@ -116,7 +113,7 @@ const Secured = () => {
   useEffect(()=>{
     if(elementName !== "brush" && elementName !== "arrow" && prevsave1 == 0 && onBoard){
       generateElement(mouseDown[0], mouseDown[1], mouseMove[0], mouseMove[1])
-      prevsave1 = mouseMove[0], prevsave2 = mouseMove[1];
+      prevsave1 = mouseMove[0], prevsave2 = mouseMove[1];  
     }else{
 
     }
@@ -162,12 +159,20 @@ const Secured = () => {
     setCurrentCanvasPointer(0)
     setpathdata([]);
     setPathdataHistory([]);
-
-    // // if the user is resetting canvas then undo redo won't work.
-    // if(!(source == "undo"))
-    //   // setContextData([]) 
-    // return;
   };
+
+  const resetCanvasWithBtn = () => {
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+    setCurrentCanvasPointer(0)
+    setpathdata([]);
+    setPathdataHistory([]);
+    setContextData([])
+  }
 
   const generateLinearPath = (maindata: number[][]) => {
     if(!canvasRef.current) return;
@@ -191,7 +196,7 @@ const Secured = () => {
     // let linearPath = generator.linearPath(maindata.map((input) => [input[0], input[1]]), shapeOptions)
     // roughCanvas.draw(linearPath)
 
-
+    
     const roughCanvas = rough.canvas(canvasRef.current);
     const generator = roughCanvas.generator;
 
@@ -248,14 +253,15 @@ const Secured = () => {
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    setMouseDown([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
     setOnBoard(true)
+    setMouseDown([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
     if(elementName === "brush")
       setbrushDown(true)
     // console.log(mouseDown[0], mouseDown[1])
-    // console.log( e.nativeEvent.offsetX, e.nativeEvent.offsetY)
+    // console.log( e.nativeEvent.offsetX, e.nativeEvent.offsetY)44
+    
   };
-
+  
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     if(elementName === "brush" && brushDown)
@@ -344,7 +350,7 @@ const Secured = () => {
         </div>
 
           <div style={{scale:".85"}} >
-            <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvas()}><GrPowerReset/></button>
+            <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvasWithBtn()}><GrPowerReset/></button>
             <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}><LuUndo2/></button>
             <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}><LuRedo2/></button>
             <button className="ms-1 me-1 rounded-5" onClick={handleDownload}><FiDownload/></button>

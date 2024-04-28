@@ -46,3 +46,20 @@ input[type="radio"]:checked + label {
     color: black;
     box-shadow: 0 0 10px black !important;
 }
+
+.canvasContainer {
+    height: 67vh;
+    width: 90vw;
+    position: relative;
+}
+
+.canvasContainer canvas:nth-child(1){
+    position: absolute;
+    top: 0;
+    z-index: 52;
+}
+.canvasContainer canvas:nth-child(2){
+    position: absolute;
+    top: 0;
+    z-index: 2;
+}

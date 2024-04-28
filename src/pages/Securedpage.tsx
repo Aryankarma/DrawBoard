@@ -12,7 +12,7 @@ import { MdDownload } from "react-icons/md";
 import "./styles.css"
 import { FaPaintBrush } from "react-icons/fa";
 import { IoColorPaletteOutline } from "react-icons/io5";
-
+  
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mouseUp, setMouseUp] = useState<[number, number]>([0, 0]);
@@ -32,6 +32,11 @@ const Secured = () => {
   const [contextData, setContextData] = useState<string[][]>([]);
   const [tempcontext, sjettempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0)
+
+
+  const drawingCanvasRef = useRef(null);
+  const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
 
   useEffect(()=>{
     setCurrentCanvasPointer(contextData.length - 1)
@@ -76,7 +81,7 @@ const Secured = () => {
           resetCanvas()
           return;
         }
-        image.src = contextData2[currentCanvasPointer - 1][0];
+        image.src = contextData[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1)
      }
     }
@@ -107,6 +112,26 @@ const Secured = () => {
       saveCanvasContext()
       runthisonce()
   },[onBoard])
+
+  useEffect(() => {
+    if (!onBoard) {
+      // When not actively drawing, copy the temporary canvas to the background canvas
+      const backgroundCanvas = backgroundCanvasRef.current;
+      const drawingCanvas = canvasRef.current;
+      if (backgroundCanvas && drawingCanvas) {
+        const bgCtx = backgroundCanvas.getContext('2d');
+        const drawingCtx = drawingCanvas.getContext('2d');
+        if (bgCtx && drawingCtx) {
+          // Clear the background canvas and copy the temporary canvas to it
+          bgCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+          bgCtx.drawImage(drawingCanvas, 0, 0);
+  
+          // Clear the temporary canvas
+          drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        }
+      }
+    }
+  }, [onBoard]);
 
   let prevsave1 = 0, prevsave2 = 0;
 
@@ -161,6 +186,49 @@ const Secured = () => {
     setPathdataHistory([]);
   };
 
+  // const fixRendering = () => {
+
+  //   // from download
+  //   if(canvasRef.current){
+  //     const canvas = canvasRef.current;
+  //     const ctx = canvas.getContext('2d');
+  
+  //     // Create a new canvas with a black background
+  //     const renderCanvas = document.createElement('canvas');
+  //     renderCanvas.width = canvas.width;
+  //     renderCanvas.height = canvas.height;
+  //     const renderCTX = renderCanvas.getContext('2d');
+  
+  //     // Fill the new canvas with black background
+  //     renderCTX.fillStyle = '#212529';
+  //     renderCTX.fillRect(0, 0, renderCanvas.width, renderCanvas.height);
+  
+  //     // Draw the existing content onto the new canvas with black background
+  //     renderCTX.drawImage(canvas, 0, 0);
+
+  //     const dataURLtoRender = canvasRef.current.toDataURL() 
+      
+  //     const image = new Image();
+
+  //     image.onload = function() {
+  //       ctx.drawImage(image, 0, 0);
+  //     };
+  //     image.src = dataURLtoRender;
+
+    // }
+
+    // runthisonce
+    // const canvas = canvasRef.current;
+    // const ctx = canvas.getContext('2d');
+    // const dataURL = contextData[contextData.length - 1];
+    // const image = new Image();
+    
+    // image.onload = function() {
+    //   ctx.drawImage(image, 0, 0);
+    // };
+    // image.src = dataURL;
+  // }
+  
   const resetCanvasWithBtn = () => {
     if (canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -180,12 +248,9 @@ const Secured = () => {
     const generator = roughCanvas.generator;
     let linearPath = generator.linearPath(maindata.map((input) => [input[0], input[1]]), shapeOptions)
     roughCanvas.draw(linearPath)
-    // setElementsCount(elementsCount + 1)
-    // console.log(elementsCount)
   }
 
   const generateElement = ( downx: number, downy: number, upx: number, upy: number ) => {
-
 
     if(prevsave1 != upx || prevsave2 != upy){
       resetCanvas()
@@ -206,9 +271,7 @@ const Secured = () => {
 
     let circle1 = generator.circle( (downx + upx)/2, (downy + upy)/2 , Math.sqrt(Math.pow(upx - downx, 2) + Math.pow(upy - downy, 2)), shapeOptions);
 
-    let ellipse1 = generator.ellipse( (downx + upx)/2, (downy + upy)/2, upx - downx, upy - downy, shapeOptions);
-
-    let shapeToDraw = ellipse1;
+    let shapeToDraw = rect1;
 
     switch (elementName) {
       case "line":
@@ -357,16 +420,26 @@ const Secured = () => {
           </div>
 
       </div>
-    
-      <canvas
-        className="shadow-lg bg-dark mt-3 mb-5 rounded-3"
-        ref={canvasRef}
-        onMouseMove={handleMouseMove}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        width={window.innerWidth - 100}
-        height={window.innerHeight - 175}
-      />
+
+      <div className="canvasContainer">
+        <canvas
+          className="shadow-lg mt-3 mb-5 rounded-3"
+          ref={canvasRef}
+          onMouseMove={handleMouseMove}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          width={window.innerWidth - 100}
+          height={window.innerHeight - 175}
+        />
+
+        <canvas 
+          ref={backgroundCanvasRef}
+          className="shadow-lg mt-3 mb-5 rounded-3"
+          width={window.innerWidth - 100}
+          height={window.innerHeight - 175}
+        />
+      </div>
+
     </div>
     
   );
@@ -375,8 +448,5 @@ const Secured = () => {
 export default Secured;
 
 
-
-
-// 1. maybe themes or atleast make it light
-// 2. add collaboration
-// 3. fix UI
+// idea create 2 canvas and then copy them clone them both everytime the old canvas gets updated wuth a new element, then while 
+// and everytime show both of the canvas on top of each other and just keep them updated and then make sure when you remove an element from the original one the background one gets updated.

@@ -33,24 +33,33 @@ const Secured = () => {
   const [tempcontext, sjettempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0)
 
-
   const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
 
   useEffect(()=>{
     setCurrentCanvasPointer(contextData.length - 1)
   }, [contextData])
 
   useEffect(()=>{
-    // console.log(contextData)
-  }, [contextData])
+    if(!onBoard){
+      savebgCanvasContext()
+    }
+  }, [onBoard])
 
   const saveCanvasContext = () => {
     if (canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
         setContextData(prevdata => [...prevdata, [canvasRef.current.toDataURL()]]);
+      }
+    }
+  };
+
+  const savebgCanvasContext = () => {
+    if (backgroundCanvasRef.current) {
+      const context = backgroundCanvasRef.current.getContext('2d');
+      if (context) {
+        setContextData(prevdata => [...prevdata, [backgroundCanvasRef.current.toDataURL()]]);
       }
     }
   };
@@ -68,17 +77,17 @@ const Secured = () => {
   }
 
   const undoCanvasContext = () => {
-    if (canvasRef.current && contextData){  
-      const context = canvasRef.current.getContext('2d');
+    if (backgroundCanvasRef.current && contextData){  
+      const context = backgroundCanvasRef.current.getContext('2d');
       if (context) {
         const image = new Image();
         image.onload = () => {
-          context.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          context.clearRect(0, 0, backgroundCanvasRef.current!.width, backgroundCanvasRef.current!.height);
           context.drawImage(image, 0, 0);
         };
         console.log("currentCanvasPointer when undo ", currentCanvasPointer)
-        if(currentCanvasPointer == 0){
-          resetCanvas()
+        if(currentCanvasPointer <= 0){
+          // notify that "nothing to undo"
           return;
         }
         image.src = contextData[currentCanvasPointer - 1][0];
@@ -88,16 +97,21 @@ const Secured = () => {
   };
 
   const redoCanvasContext = () => {
-    if (canvasRef.current && contextData) {
-      const context = canvasRef.current.getContext('2d');
+    if (backgroundCanvasRef.current && contextData) {
+      const context = backgroundCanvasRef.current.getContext('2d');
       if (context) {
         const image = new Image();
         image.onload = () => {
-          context.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          context.clearRect(0, 0, backgroundCanvasRef.current!.width, backgroundCanvasRef.current!.height);
           context.drawImage(image, 0, 0);
         };
         console.log("currentCanvasPointer when you redo ", currentCanvasPointer)
-        
+
+        if(currentCanvasPointer >= contextData.length - 1){
+          // notify that "nothing to redo
+          return;
+        }
+
         image.src = contextData[currentCanvasPointer + 1][0];
         setCurrentCanvasPointer(currentCanvasPointer + 1)
      }
@@ -109,9 +123,8 @@ const Secured = () => {
   },[contextData])
 
   useEffect(()=>{
-      // saveCanvasContext()
-      // runthisonce()
-  },[onBoard])
+    // savebgCanvasContext()
+  },[])
 
   useEffect(() => {
     if (!onBoard) {
@@ -131,15 +144,13 @@ const Secured = () => {
       }
     }
   }, [onBoard]);
-  
+
   let prevsave1 = 0, prevsave2 = 0;
 
   useEffect(()=>{
     if(elementName !== "brush" && elementName !== "arrow" && prevsave1 == 0 && onBoard){
       generateElement(mouseDown[0], mouseDown[1], mouseMove[0], mouseMove[1])
       prevsave1 = mouseMove[0], prevsave2 = mouseMove[1];  
-    }else{
-
     }
   }, [mouseMove])
 
@@ -229,10 +240,10 @@ const Secured = () => {
   // }
   
   const resetCanvasWithBtn = () => {
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
+    if (backgroundCanvasRef.current) {
+      const context = backgroundCanvasRef.current.getContext('2d');
       if (context) {
-        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        context.clearRect(0, 0, backgroundCanvasRef.current.width, backgroundCanvasRef.current.height);
       }
     }
     setCurrentCanvasPointer(0)
@@ -287,7 +298,7 @@ const Secured = () => {
     roughCanvas.draw(shapeToDraw);
   }
 
-  const handleDownloadBg = () => {
+  const handleDownloadBgCanvas = () => {
     if(canvasRef.current){
       const canvas = backgroundCanvasRef.current;
       const ctx = canvas.getContext('2d');
@@ -442,7 +453,7 @@ const Secured = () => {
             <button className="ms-1 me-1 rounded-5 " onClick={()=>resetCanvasWithBtn()}><GrPowerReset/></button>
             <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}><LuUndo2/></button>
             <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}><LuRedo2/></button>
-            <button className="ms-1 me-1 rounded-5" onClick={handleDownload}><FiDownload/></button>
+            <button className="ms-1 me-1 rounded-5" onClick={handleDownloadBgCanvas}><FiDownload/></button>
           </div>
 
       </div>
@@ -458,7 +469,7 @@ const Secured = () => {
           height={window.innerHeight - 175}
         />
 
-        <canvas 
+        <canvas // send bg color
           ref={backgroundCanvasRef}
           className="shadow-lg mt-3 mb-5 rounded-3"
           width={window.innerWidth - 100}
@@ -476,3 +487,13 @@ export default Secured;
 
 // idea create 2 canvas and then copy them clone them both everytime the old canvas gets updated wuth a new element, then while 
 // and everytime show both of the canvas on top of each other and just keep them updated and then make sure when you remove an element from the original one the background one gets updated.
+
+// updates to do now - 
+// connect the background canvas in the undo redo functionality
+
+// extra features to add - 
+// 1. add a stg option where user can set 
+//    - canvas bg color
+//    - configure the element bg styles
+//    - configure the shapeOptions like randomness etc
+//    - 

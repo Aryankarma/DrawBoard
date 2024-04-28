@@ -109,8 +109,8 @@ const Secured = () => {
   },[contextData])
 
   useEffect(()=>{
-      saveCanvasContext()
-      runthisonce()
+      // saveCanvasContext()
+      // runthisonce()
   },[onBoard])
 
   useEffect(() => {
@@ -122,17 +122,16 @@ const Secured = () => {
         const bgCtx = backgroundCanvas.getContext('2d');
         const drawingCtx = drawingCanvas.getContext('2d');
         if (bgCtx && drawingCtx) {
-          // Clear the background canvas and copy the temporary canvas to it
-          bgCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+          // Copy the temporary canvas to the background canvas without clearing it
           bgCtx.drawImage(drawingCanvas, 0, 0);
-  
+          
           // Clear the temporary canvas
           drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
       }
     }
   }, [onBoard]);
-
+  
   let prevsave1 = 0, prevsave2 = 0;
 
   useEffect(()=>{
@@ -286,6 +285,33 @@ const Secured = () => {
     }
 
     roughCanvas.draw(shapeToDraw);
+  }
+
+  const handleDownloadBg = () => {
+    if(canvasRef.current){
+      const canvas = backgroundCanvasRef.current;
+      const ctx = canvas.getContext('2d');
+  
+      // Create a new canvas with a black background
+      const downloadCanvas = document.createElement('canvas');
+      downloadCanvas.width = canvas.width;
+      downloadCanvas.height = canvas.height;
+      const downloadCtx = downloadCanvas.getContext('2d');
+  
+      // Fill the new canvas with black background
+      downloadCtx.fillStyle = '#212529';
+      downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
+  
+      // Draw the existing content onto the new canvas with black background
+      downloadCtx.drawImage(canvas, 0, 0);
+  
+      // Download the new canvas with black background
+      const link = document.createElement("a");
+      link.download = "whiteboard.png"; // Use PNG for transparent backgrounds (optional)
+      link.href = downloadCanvas.toDataURL('image/png'); // Specify PNG format (optional)
+      link.click();
+    }
+
   }
 
   const handleDownload = () => {

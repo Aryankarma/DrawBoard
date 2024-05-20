@@ -25,7 +25,7 @@ const Secured = () => {
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element
 
   const [pathdata, setpathdata] = useState<number[][]>([]);
-  const [pathdataHistory, setPathdataHistory] = useState<number[][][]>([]);
+  const [pathdataHistory, setPathdataHistory] = useState<number[][][]>([]); // brush
   const [brushDown, setbrushDown] = useState(false);
   const [onBoard, setOnBoard] = useState(false);
 
@@ -38,6 +38,7 @@ const Secured = () => {
 
   useEffect(()=>{
     setCurrentCanvasPointer(contextData.length - 1)
+    // console.log(contextData)
   }, [contextData])
 
   useEffect(()=>{
@@ -48,7 +49,7 @@ const Secured = () => {
 
   const saveCanvasContext = () => {
     if (canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
+      const context = canvasRef.current.getContext("2d");
       if (context) {
         setContextData(prevdata => [...prevdata, [canvasRef.current.toDataURL()]]);
       }
@@ -64,17 +65,29 @@ const Secured = () => {
     }
   };
 
-  const runthisonce = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const dataURL = contextData[contextData.length - 1];
-    const image = new Image();
-    
-    image.onload = function() {
-      ctx.drawImage(image, 0, 0);
-    };
-    image.src = dataURL;
+const runthisonce = () => {
+  const canvas = canvasRef.current;
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const dataURL = contextData[contextData.length - 1];
+      if (dataURL) {
+        const image = new Image();
+        image.onload = function () {
+          ctx.drawImage(image, 0, 0);
+        };
+        image.src = dataURL[0];
+      } else {
+        console.error("No data URL found in contextData");
+      }
+    } else {
+      console.error("Failed to get 2D context");
+    }
+  } else {
+    console.error("canvasRef.current is null or undefined");
   }
+};
+
 
   const undoCanvasContext = () => {
     if (backgroundCanvasRef.current && contextData){  
@@ -126,6 +139,7 @@ const Secured = () => {
     // savebgCanvasContext()
   },[])
 
+  // socket io
   useEffect(() => {
     if (!onBoard) {
       // When not actively drawing, copy the temporary canvas to the background canvas
@@ -136,6 +150,8 @@ const Secured = () => {
         const drawingCtx = drawingCanvas.getContext('2d');
         if (bgCtx && drawingCtx) {
           // Copy the temporary canvas to the background canvas without clearing it
+          // send this to peer [drawingCanvas]
+          // console.log(drawingCanvas)
           bgCtx.drawImage(drawingCanvas, 0, 0);
           
           // Clear the temporary canvas
@@ -196,49 +212,7 @@ const Secured = () => {
     setPathdataHistory([]);
   };
 
-  // const fixRendering = () => {
 
-  //   // from download
-  //   if(canvasRef.current){
-  //     const canvas = canvasRef.current;
-  //     const ctx = canvas.getContext('2d');
-  
-  //     // Create a new canvas with a black background
-  //     const renderCanvas = document.createElement('canvas');
-  //     renderCanvas.width = canvas.width;
-  //     renderCanvas.height = canvas.height;
-  //     const renderCTX = renderCanvas.getContext('2d');
-  
-  //     // Fill the new canvas with black background
-  //     renderCTX.fillStyle = '#212529';
-  //     renderCTX.fillRect(0, 0, renderCanvas.width, renderCanvas.height);
-  
-  //     // Draw the existing content onto the new canvas with black background
-  //     renderCTX.drawImage(canvas, 0, 0);
-
-  //     const dataURLtoRender = canvasRef.current.toDataURL() 
-      
-  //     const image = new Image();
-
-  //     image.onload = function() {
-  //       ctx.drawImage(image, 0, 0);
-  //     };
-  //     image.src = dataURLtoRender;
-
-    // }
-
-    // runthisonce
-    // const canvas = canvasRef.current;
-    // const ctx = canvas.getContext('2d');
-    // const dataURL = contextData[contextData.length - 1];
-    // const image = new Image();
-    
-    // image.onload = function() {
-    //   ctx.drawImage(image, 0, 0);
-    // };
-    // image.src = dataURL;
-  // }
-  
   const resetCanvasWithBtn = () => {
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext('2d');
@@ -301,28 +275,38 @@ const Secured = () => {
   const handleDownloadBgCanvas = () => {
     if(canvasRef.current){
       const canvas = backgroundCanvasRef.current;
-      const ctx = canvas.getContext('2d');
-  
-      // Create a new canvas with a black background
-      const downloadCanvas = document.createElement('canvas');
-      downloadCanvas.width = canvas.width;
-      downloadCanvas.height = canvas.height;
-      const downloadCtx = downloadCanvas.getContext('2d');
-  
-      // Fill the new canvas with black background
-      downloadCtx.fillStyle = '#212529';
-      downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
-  
-      // Draw the existing content onto the new canvas with black background
-      downloadCtx.drawImage(canvas, 0, 0);
-  
-      // Download the new canvas with black background
-      const link = document.createElement("a");
-      link.download = "whiteboard.png"; // Use PNG for transparent backgrounds (optional)
-      link.href = downloadCanvas.toDataURL('image/png'); // Specify PNG format (optional)
-      link.click();
-    }
 
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+    
+        // Create a new canvas with a black background
+        const downloadCanvas = document.createElement('canvas');
+        downloadCanvas.width = canvas.width;
+        downloadCanvas.height = canvas.height;
+        const downloadCtx = downloadCanvas.getContext('2d');
+        
+        if (downloadCtx) {
+          // Fill the new canvas with black background
+          downloadCtx.fillStyle = '#212529';
+          downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
+      
+          // Draw the existing content onto the new canvas with black background
+          downloadCtx.drawImage(canvas, 0, 0);
+      
+          // Download the new canvas with black background
+          const link = document.createElement("a");
+          link.download = "whiteboard.png"; // Use PNG for transparent backgrounds (optional)
+          link.href = downloadCanvas.toDataURL('image/png'); // Specify PNG format (optional)
+          link.click();          
+        } else {
+          console.error("Failed to get downloadCtx");
+        }
+      } else {
+        console.error("Failed to get canvas");
+      }
+    } else {
+      console.error("Failed to get canvasRef.current");
+    }
   }
 
   const handleDownload = () => {
@@ -336,12 +320,14 @@ const Secured = () => {
       downloadCanvas.height = canvas.height;
       const downloadCtx = downloadCanvas.getContext('2d');
   
-      // Fill the new canvas with black background
-      downloadCtx.fillStyle = '#212529';
-      downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
-  
-      // Draw the existing content onto the new canvas with black background
-      downloadCtx.drawImage(canvas, 0, 0);
+      if (downloadCtx) {
+        // Fill the new canvas with black background
+        downloadCtx.fillStyle = "#212529";
+        downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height)
+
+        // Draw the existing content onto the new canvas with black background
+        downloadCtx.drawImage(canvas, 0, 0);        
+      }
   
       // Download the new canvas with black background
       const link = document.createElement("a");
@@ -387,6 +373,9 @@ const Secured = () => {
 
     // saveCanvasContext()
     // runthisonce()
+
+    // console.log(pathdataHistory);
+    // console.log(contextData)
   };
 
   const tempstyle = {
@@ -460,7 +449,7 @@ const Secured = () => {
 
       <div className="canvasContainer">
         <canvas
-          className="shadow-lg mt-3 mb-5 rounded-3"
+          // className="shadow-lg mt-3 mb-5 rounded-3"
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
@@ -471,7 +460,7 @@ const Secured = () => {
 
         <canvas // send bg color
           ref={backgroundCanvasRef}
-          className="shadow-lg mt-3 mb-5 rounded-3"
+          // className="shadow-lg mt-3 mb-5 rounded-3"
           width={window.innerWidth - 100}
           height={window.innerHeight - 175}
         />
@@ -490,10 +479,14 @@ export default Secured;
 
 // updates to do now - 
 // connect the background canvas in the undo redo functionality
+// setup webRTC
 
 // extra features to add - 
 // 1. add a stg option where user can set 
 //    - canvas bg color
 //    - configure the element bg styles
 //    - configure the shapeOptions like randomness etc
-//    - 
+
+//  Workings for webrtc
+//   - check the element updation if updated on peer 1 - send the context string to other peers and set them
+//   - share the context and set it on each new element generation

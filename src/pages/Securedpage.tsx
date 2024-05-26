@@ -53,11 +53,12 @@ const Secured = () => {
       input != null ? setContextData(input) : null;
 
 
+      // we sent the context data to sync peers
       if (input != null && undoCanvasContext != undefined && redoCanvasContext != undefined) {
-        undoCanvasContext()
-        redoCanvasContext()
-        // resetCanvasWithBtn()
-        setrerender(prevValue => prevValue + 1)
+        // undoCanvasContext()
+        // redoCanvasContext()
+        // // resetCanvasWithBtn()
+        // setrerender(prevValue => prevValue + 1)
         // console.log("ran undo and redo")
       }
 
@@ -151,6 +152,7 @@ const Secured = () => {
       if (context) {
         const image = new Image();
         image.onload = () => {
+          // console.log("undo from peer")
           context.clearRect(
             0,
             0,
@@ -681,4 +683,4 @@ export default Secured;
 
 //  Workings for webrtc
 //   - check the element updation if updated on peer 1 - send the context string to other peers and set them
-//   - share the context and set it on each new element generation
+//   - share the context and set it on each new element generation\

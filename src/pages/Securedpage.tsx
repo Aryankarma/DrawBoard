@@ -31,7 +31,7 @@ const Secured = () => {
   const [onBoard, setOnBoard] = useState(false);
 
   const [contextData, setContextData] = useState<string[][]>([]);
-  const [latestContext, setLatestContext] = useState<string>();
+  // const [latestContext, setLatestContext] = useState<string>();
   const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0);
 
@@ -40,52 +40,25 @@ const Secured = () => {
   const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const sendDataToPeer = (contextData: string[][], backgroundCanvasData: HTMLCanvasElement) => {
+  // in this socketio2 branch we would send the actual canvas data and then update that on peers devices
+  const sendDataToPeer = (backgroundCanvasData: HTMLCanvasElement) => {
     // sending data from client to server 
     // console.log(backgroundCanvasData)
-    socket.emit("dataSharing", contextData);
+    socket.emit("dataSharing", backgroundCanvasData);
   };
 
   useEffect(() => {
     // recieving data from the server
     socket.on("dataSharing", (input) => {
-      // console.log("this many times");
-      input != null ? setContextData(input) : null;
+      // input != null ? setContextData(input) : null;
+      console.log("data recieved")
 
-
-      // we sent the context data to sync peers
-      if (input != null && undoCanvasContext != undefined && redoCanvasContext != undefined) {
-        // undoCanvasContext()
-        // redoCanvasContext()
-        // // resetCanvasWithBtn()
-        // setrerender(prevValue => prevValue + 1)
-        // console.log("ran undo and redo")
-      }
-
-      // When not actively drawing, copy the temporary canvas to the background canvas
-      // const backgroundCanvas = backgroundCanvasRef.current;
-      // // console.log(backgroundCanvas);
-      // const drawingCanvas = canvasRef.current;
-      // if (backgroundCanvas && drawingCanvas) {
-      //   const bgCtx = backgroundCanvas.getContext("2d");
-      //   const drawingCtx = drawingCanvas.getContext("2d");
-      //   if (bgCtx && drawingCtx) {
-      //     // Copy the temporary canvas to the background canvas without clearing it
-      //     // send this to peer [drawingCanvas]
-      //     // console.log(drawingCanvas)
-      //     bgCtx.drawImage(drawingCanvas, 0, 0);
-
-      //     // Clear the temporary canvas
-      //     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-      //   }
-      //   // sendDataToPeer(latestContext);
-      // }
     }); 
   }, []);
 
   useEffect(() => {
     setCurrentCanvasPointer(contextData.length - 1);
-    setLatestContext(contextData);
+    // setLatestContext(contextData);
     // console.log("context data update")
   }, [contextData]);
 
@@ -161,7 +134,7 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null;
+        // currentCanvasPointer != 0 ? sendDataToPeer(backgroundCanvas); : null;
         if (currentCanvasPointer <= 0) {
           // notify that "nothing to undo"
           return;
@@ -179,16 +152,16 @@ const Secured = () => {
         const image = new Image();
         image.onload = () => {
           context.clearRect(
-            0, 
             0,
-            backgroundCanvasRef.current!.width, 
+            0,
+            backgroundCanvasRef.current!.width,
             backgroundCanvasRef.current!.height
           );
           context.drawImage(image, 0, 0);
         };
         // console.log("currentCanvasPointer when you redo ", currentCanvasPointer)
         // console.log("send data now ", currentCanvasPointer);
-        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null; 
+        // currentCanvasPointer != 0 ? sendDataToPeer(backgroundCanvas); : null;
         if (currentCanvasPointer >= contextData.length - 1) {
           // notify that "nothing to redo
           return;
@@ -224,7 +197,7 @@ const Secured = () => {
           // Clear the temporary canvas
           drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
-        sendDataToPeer(latestContext, backgroundCanvas);
+        sendDataToPeer(backgroundCanvas);
       }
     }
   }, [onBoard]);
@@ -303,7 +276,7 @@ const Secured = () => {
         );
       }
     }
-    // sendDataToPeer(latestContext);
+    // sendDataToPeer(backgroundCanvas);    
     setContextData([]);
     setCurrentCanvasPointer(0);
     setpathdata([]);

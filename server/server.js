@@ -17,8 +17,8 @@ io.on("connection", (socket) => {
     })
 
     socket.on("dataSharing", (inputData) => {
-    //   console.log(inputData);
-    //   console.log("backgroundCanvasData");
+      console.log(inputData);
+      // console.log("backgroundCanvasData");
       // io.emit("dataSharing", inputData)
       socket.broadcast.emit("dataSharing", inputData);
     });

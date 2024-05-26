@@ -1,5 +1,5 @@
 {
-  "name": "frontendassignment",
+  "name": "DrawBoard",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,13 +12,16 @@
   "dependencies": {
     "@react-keycloak/web": "^3.4.0",
     "bootstrap": "^5.3.3",
+    "express": "^4.19.2",
     "keycloak-js": "^24.0.3",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.2.0",
     "react-icons": "^5.1.0",
     "react-router-dom": "^6.22.3",
-    "roughjs": "^4.6.6"
+    "roughjs": "^4.6.6",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

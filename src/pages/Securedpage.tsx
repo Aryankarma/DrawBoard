@@ -668,12 +668,11 @@ const Secured = () => {
 
 export default Secured;
 
-// idea create 2 canvas and then copy them clone them both everytime the old canvas gets updated wuth a new element, then while
-// and everytime show both of the canvas on top of each other and just keep them updated and then make sure when you remove an element from the original one the background one gets updated.
-
 // updates to do now -
-// connect the background canvas in the undo redo functionality
-// setup webRTC
+
+// fix -1 sharing of context
+// undo redo functionality sync with peers
+
 
 // extra features to add -
 // 1. add a stg option where user can set
@@ -681,6 +680,6 @@ export default Secured;
 //    - configure the element bg styles
 //    - configure the shapeOptions like randomness etc
 
-//  Workings for webrtc
-//   - check the element updation if updated on peer 1 - send the context string to other peers and set them
-//   - share the context and set it on each new element generation\
+//  Workings for socket io
+  //// - check the element updation if updated on peer 1 - send the context string to other peers and set them
+////   - share the context and set it on each new element generation\

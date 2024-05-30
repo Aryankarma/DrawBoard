@@ -51,43 +51,43 @@ const Secured = () => {
     socket.on("dataSharing", (input) => {
       // console.log("this many times");
       input != null ? setContextData(input) : null;
-
-
-      // we sent the context data to sync peers
-      if (input != null && undoCanvasContext != undefined && redoCanvasContext != undefined) {
-        // undoCanvasContext()
-        // redoCanvasContext()
-        // // resetCanvasWithBtn()
-        // setrerender(prevValue => prevValue + 1)
-        // console.log("ran undo and redo")
-      }
-
-      // When not actively drawing, copy the temporary canvas to the background canvas
-      // const backgroundCanvas = backgroundCanvasRef.current;
-      // // console.log(backgroundCanvas);
-      // const drawingCanvas = canvasRef.current;
-      // if (backgroundCanvas && drawingCanvas) {
-      //   const bgCtx = backgroundCanvas.getContext("2d");
-      //   const drawingCtx = drawingCanvas.getContext("2d");
-      //   if (bgCtx && drawingCtx) {
-      //     // Copy the temporary canvas to the background canvas without clearing it
-      //     // send this to peer [drawingCanvas]
-      //     // console.log(drawingCanvas)
-      //     bgCtx.drawImage(drawingCanvas, 0, 0);
-
-      //     // Clear the temporary canvas
-      //     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-      //   }
-      //   // sendDataToPeer(latestContext);
-      // }
     }); 
+
+    return () => {
+      socket.off("dataSharing");
+    };
+
   }, []);
 
   useEffect(() => {
     setCurrentCanvasPointer(contextData.length - 1);
     setLatestContext(contextData);
+    reDrawCanvas();
     // console.log("context data update")
   }, [contextData]);
+
+  const reDrawCanvas = () => {
+    if (backgroundCanvasRef.current) {
+      const context = backgroundCanvasRef.current.getContext("2d");
+      if (context) {
+        const image = new Image();
+        image.onload = () => {
+          // console.log("undo from peer")
+          context.clearRect(
+            0,
+            0,
+            backgroundCanvasRef.current!.width,
+            backgroundCanvasRef.current!.height
+          );
+          context.drawImage(image, 0, 0);
+        };
+        image.src = contextData[contextData.length-1]
+          ? contextData[contextData.length-1][0]
+          : null;
+      }
+    }
+  };
+
 
   useEffect(() => {
     if (!onBoard) {
@@ -303,7 +303,7 @@ const Secured = () => {
         );
       }
     }
-    // sendDataToPeer(latestContext);
+    sendDataToPeer(latestContext);
     setContextData([]);
     setCurrentCanvasPointer(0);
     setpathdata([]);

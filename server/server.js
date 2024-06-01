@@ -16,10 +16,8 @@ io.on("connection", (socket) => {
         console.log("user disconnected")
     })
 
-    socket.on("dataSharing", (inputData) => {
-    //   console.log(inputData);
-    //   console.log("backgroundCanvasData");
-      // io.emit("dataSharing", inputData)
-      socket.broadcast.emit("dataSharing", inputData);
+    socket.on("ultimateSharing", (input, inputNumber) => {
+        socket.broadcast.emit("ultimateSharing", input, inputNumber)
     });
+
 })

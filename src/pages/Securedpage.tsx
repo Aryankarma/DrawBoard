@@ -48,22 +48,26 @@ const Secured = () => {
   // recieving data from the server
   useEffect(() => {
     socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
-      console.log("ultimate input <<< ", ultimateContext);
-      console.log("ultimate input number <<< ", ultimateNumber);
+      // console.log("ultimate input <<< ", ultimateContext);
+      // console.log("ultimate input number <<< ", ultimateNumber);
       ultimateContext != null ? setContextData(ultimateContext) : null;
-      // console.log(ultimateNumber)
-      // console.log("not so ultimate context : ", ultimateContext);
+      // console.log(ultimateContext)
+      // console.log("not so ultimatcanvasPointer ? canvasPointer : -100 context : ", ultimateContext);
       // console.log(ultimateContext[ultimateNumber - 1][0]);
+      
+      if (ultimateNumber == -10000) {
+        resetPeerContext();
+      }
+
       if (ultimateContext[ultimateNumber - 1][0]) {
         console.log("image source is available");
 
-        // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndo
+        // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
         setTimeout(() => {
-          reDrawCanvasForUndo(ultimateContext[ultimateNumber - 1][0]);
+          reDrawCanvasForUndoRedo(ultimateContext[ultimateNumber - 1][0]);
         }, 10);
       }
     });
-
 
     return () => {
       // socket.off("contextSharing");
@@ -72,6 +76,24 @@ const Secured = () => {
     };
 
   }, []);
+
+  const resetPeerContext = () => {
+      if (backgroundCanvasRef.current) {
+        const context = backgroundCanvasRef.current.getContext("2d");
+        if (context) {
+          context.clearRect(
+            0,
+            0,
+            backgroundCanvasRef.current.width,
+            backgroundCanvasRef.current.height
+          );
+        }
+      }
+      setContextData([]);
+      setCurrentCanvasPointer(0);
+      setpathdata([]);
+      setPathdataHistory([]);
+    }
 
   useEffect(() => {
     setCurrentCanvasPointer(contextData.length - 1);
@@ -100,7 +122,6 @@ const Secured = () => {
         };
         // console.log(contextData[contextData.length - 1]);
         // console.log("before: ", image.src)
-      
           image.src = contextData[contextData.length - 1]
             ? contextData[contextData.length - 1][0]
             : null;
@@ -108,8 +129,7 @@ const Secured = () => {
     }
   };
 
-
-  const reDrawCanvasForUndo = (imageSource: string) => {
+  const reDrawCanvasForUndoRedo = (imageSource: string) => {
     console.log("actual image source : ", imageSource);
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
@@ -134,17 +154,13 @@ const Secured = () => {
           // console.log("inside redraw context ", contextData)
           // image.src = contextData[canvasPointer - 1][0];
           image.src = imageSource;
-          // console.log(imageSource)
-          // console.log(contextData)
-          // console.log(contextData[canvasPointer - 1][0]);
-          // sendDataToPeer(imageSource);
-        } 
+          } 
       }
     }
   };
 
 
-
+  
   useEffect(() => {
     if (!onBoard) {
       savebgCanvasContext();
@@ -230,7 +246,7 @@ const Secured = () => {
       }
     }
   };
-
+  
   const redoCanvasContext = () => {
     if (backgroundCanvasRef.current && contextData) {
       const context = backgroundCanvasRef.current.getContext("2d");
@@ -255,6 +271,7 @@ const Secured = () => {
 
         image.src = contextData[currentCanvasPointer + 1][0];
         setCurrentCanvasPointer(currentCanvasPointer + 1);
+        sendDataToPeer(latestContext, currentCanvasPointer + 1);
       }
     }
   };
@@ -316,7 +333,7 @@ const Secured = () => {
   const shapeOptions: Options = {
     stroke: strokeColor,
     strokeWidth: Number(strokeWidth),
-    // fill: fillColor + "40",
+    fill: fillColor + "25",
     roughness: 1,
     curveStepCount: 99,
     bowing: 1,
@@ -367,11 +384,11 @@ const Secured = () => {
         );
       }
     }
-    sendDataToPeer(contextData);
     setContextData([]);
     setCurrentCanvasPointer(0);
     setpathdata([]);
     setPathdataHistory([]);
+    sendDataToPeer(contextData, -10000);
   };
 
   const generateLinearPath = (maindata: number[][]) => {
@@ -669,8 +686,8 @@ const Secured = () => {
             onChange={(e) => setcolorHex(e.target.value)}
           />
 
-          {/* <label htmlFor="color">Fill Color: </label>
-          <input type="color" name="fillcolor" id="fillcolor" value={fillColor} onChange={(e)=> setfillColor(e.target.value)} /> */}
+          <label htmlFor="color">Fill Color: </label>
+          <input type="color" name="fillcolor" id="fillcolor" value={fillColor} onChange={(e)=> setfillColor(e.target.value)} />
 
           <label htmlFor="range">Size: </label>
           <input

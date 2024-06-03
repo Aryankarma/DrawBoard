@@ -1,10 +1,12 @@
 import { Server } from "socket.io";
 
 const io = new Server({
-    cors: {
-        origin:"http://localhost:5173"
-    }
-})
+  maxHttpBufferSize: 1e8,
+  pingTimeout: 6000,
+  cors: {
+    origin: "http://localhost:5173",
+  },
+});
 
 io.listen(4000)
 console.log("socket io is running on 4000")
@@ -18,6 +20,8 @@ io.on("connection", (socket) => {
 
     socket.on("ultimateSharing", (input, inputNumber) => {
         socket.broadcast.emit("ultimateSharing", input, inputNumber)
+        // console.log(input)
+        // console.log(inputNumber);
     });
 
 })

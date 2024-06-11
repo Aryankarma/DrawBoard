@@ -1,8 +1,6 @@
 import {useState} from "react";
-import { useKeycloak } from "@react-keycloak/web";
 
 const Nav = () => {
-  const { keycloak } = useKeycloak();
  
   return (
     <div className="container-fluid">
@@ -32,10 +30,10 @@ const Nav = () => {
                 className="collapse navbar-collapse mk-auto"
                 id="navbarSupportedContent"
               >
-                {!keycloak.authenticated ? (
+                {/* {!keycloak.authenticated ? (
                   <button
                     type="button"
-                    className="btn btn-primary ms-auto"
+                    className="btn btn-primary ms-auto "
                     onClick={() => keycloak.login()}
                   >
                     Login
@@ -48,7 +46,7 @@ const Nav = () => {
                   >
                     Logout
                   </button>
-                )}
+                )} */}
               </div>
             </div>
           </nav>

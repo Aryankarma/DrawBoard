@@ -14,13 +14,18 @@ import "./styles.css";
 import { FaPaintBrush } from "react-icons/fa";
 import { IoColorPaletteOutline } from "react-icons/io5";
 
+import { useNavigate } from "react-router-dom";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth } from '../firebaseConfig.ts'
+import { RiH1 } from "react-icons/ri";
+
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mouseUp, setMouseUp] = useState<[number, number]>([0, 0]);
   const [mouseDown, setMouseDown] = useState<[number, number]>([0, 0]);
   const [mouseMove, setMouseMove] = useState<[number, number]>([0, 0]);
   const [strokeColor, setcolorHex] = useState<string>("#ffffff");
-  const [fillColor, setfillColor] = useState<string>("#0000ff");
+  const [fillColor, setfillColor] = useState<string>("#fafafa");
   const [strokeWidth, setstrokeWidth] = useState<string>("1");
   const [elementName, setElement] = useState<string>("arrow");
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element
@@ -31,20 +36,48 @@ const Secured = () => {
   const [onBoard, setOnBoard] = useState(false);
 
   const [contextData, setContextData] = useState<string[][]>([]);
-  const [latestContext, setLatestContext] = useState<string>();
+  const [latestContext, setLatestContext] = useState<string[][]>([]);
   const [tempcontext, settempcontext] = useState<string[]>([]);
-  const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(0);
+  const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(-1);
 
-  const [rerender, setrerender] = useState<number>(0)
+  const [rerender, setrerender] = useState<number>(0);
+
+  // auth
+  const [userlocal, setUser] = useState< User | null>(null);
+  const navigate = useNavigate();
 
   const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // sending data from client to server 
-  const sendDataToPeer = (contextData: string[][], canvasPointer: number, backgroundCanvasData: HTMLCanvasElement) => {
-    socket.emit("ultimateSharing", contextData, canvasPointer ? canvasPointer : -100)
-  };   
-  
+  // auth
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+        navigate("/")
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  // useEffect(() => {
+    // if (!userlocal) {
+    //   return <h1>Loading...</h1>
+    // }
+  // }, [userlocal]);
+
+  // sending data from client to server
+  const sendDataToPeer = (contextData: string[][], canvasPointer: number) => {
+    socket.emit(
+      "ultimateSharing",
+      contextData,
+      canvasPointer ? canvasPointer : -100
+    );
+  };
+
   // recieving data from the server
   useEffect(() => {
     socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
@@ -54,13 +87,13 @@ const Secured = () => {
       // console.log(ultimateContext)
       // console.log("not so ultimatcanvasPointer ? canvasPointer : -100 context : ", ultimateContext);
       // console.log(ultimateContext[ultimateNumber - 1][0]);
-      
+
       if (ultimateNumber == -10000) {
         resetPeerContext();
       }
 
       if (ultimateContext[ultimateNumber - 1][0]) {
-        console.log("image source is available");
+        console.log("recieved context", ultimateContext[ultimateNumber][0]);
 
         // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
         setTimeout(() => {
@@ -72,40 +105,41 @@ const Secured = () => {
     return () => {
       // socket.off("contextSharing");
       // socket.off("canvasPointer")
-      socket.off("ultimateSharing")
+      socket.off("ultimateSharing");
     };
-
   }, []);
 
   const resetPeerContext = () => {
-      if (backgroundCanvasRef.current) {
-        const context = backgroundCanvasRef.current.getContext("2d");
-        if (context) {
-          context.clearRect(
-            0,
-            0,
-            backgroundCanvasRef.current.width,
-            backgroundCanvasRef.current.height
-          );
-        }
+    if (backgroundCanvasRef.current) {
+      const context = backgroundCanvasRef.current.getContext("2d");
+      if (context) {
+        context.clearRect(
+          0,
+          0,
+          backgroundCanvasRef.current.width,
+          backgroundCanvasRef.current.height
+        );
       }
-      setContextData([]);
-      setCurrentCanvasPointer(0);
-      setpathdata([]);
-      setPathdataHistory([]);
     }
+    setContextData([]);
+    setCurrentCanvasPointer(0);
+    setpathdata([]);
+    setPathdataHistory([]);
+  };
 
   useEffect(() => {
-    setCurrentCanvasPointer(contextData.length - 1);
-    setLatestContext(contextData);
+    setCurrentCanvasPointer(contextData.length);
+    setLatestContext([...contextData]);
     // console.log(contextData)
     // console.log("current canvas pointer from useEffect:", currentCanvasPointer);
+    // console.log("UPDAING CANVAS FOR PEER")
+    // console.log(contextData)
     reDrawCanvasUpdateContext();
     // console.log("both context and currentCanvasPointer");
   }, [contextData]);
 
   const reDrawCanvasUpdateContext = () => {
-    console.log("reDrawCanvasUpdateContext is running");
+    // console.log("reDrawCanvasUpdateContext is running");
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
@@ -120,17 +154,17 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        // console.log(contextData[contextData.length - 1]);
+        // console.log("contextData for peer ", contextData);
         // console.log("before: ", image.src)
-          image.src = contextData[contextData.length - 1]
-            ? contextData[contextData.length - 1][0]
-            : null;
+        image.src = contextData[contextData.length - 1]
+          ? contextData[contextData.length - 1][0]
+          : "";
       }
     }
   };
 
   const reDrawCanvasForUndoRedo = (imageSource: string) => {
-    console.log("actual image source : ", imageSource);
+    // console.log("actual image source : ", imageSource);
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
@@ -154,13 +188,11 @@ const Secured = () => {
           // console.log("inside redraw context ", contextData)
           // image.src = contextData[canvasPointer - 1][0];
           image.src = imageSource;
-          } 
+        }
       }
     }
   };
 
-
-  
   useEffect(() => {
     if (!onBoard) {
       savebgCanvasContext();
@@ -177,7 +209,7 @@ const Secured = () => {
       if (context) {
         setContextData((prevdata) => [
           ...prevdata,
-          [canvasRef.current.toDataURL()],
+          [canvasRef.current!.toDataURL()],
         ]);
       }
     }
@@ -189,7 +221,7 @@ const Secured = () => {
       if (context) {
         setContextData((prevdata) => [
           ...prevdata,
-          [backgroundCanvasRef.current.toDataURL()],
+          [backgroundCanvasRef.current!.toDataURL()],
         ]);
       }
     }
@@ -216,7 +248,7 @@ const Secured = () => {
     } else {
       console.error("canvasRef.current is null or undefined");
     }
-  }; 
+  };
 
   const undoCanvasContext = () => {
     // console.log("undo canvas is triggered")
@@ -242,11 +274,11 @@ const Secured = () => {
         image.src = contextData[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1);
         // console.log(image.src);
-        sendDataToPeer(latestContext, currentCanvasPointer-1);
+        sendDataToPeer(latestContext, currentCanvasPointer - 1);
       }
     }
   };
-  
+
   const redoCanvasContext = () => {
     if (backgroundCanvasRef.current && contextData) {
       const context = backgroundCanvasRef.current.getContext("2d");
@@ -254,16 +286,16 @@ const Secured = () => {
         const image = new Image();
         image.onload = () => {
           context.clearRect(
-            0, 
             0,
-            backgroundCanvasRef.current!.width, 
+            0,
+            backgroundCanvasRef.current!.width,
             backgroundCanvasRef.current!.height
           );
           context.drawImage(image, 0, 0);
         };
         // console.log("currentCanvasPointer when you redo ", currentCanvasPointer)
         // console.log("send data now ", currentCanvasPointer);
-        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null; 
+        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null;
         if (currentCanvasPointer >= contextData.length - 1) {
           // notify that "nothing to redo
           return;
@@ -304,7 +336,9 @@ const Secured = () => {
           // Clear the temporary canvas
           drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
-        sendDataToPeer(contextData);
+        // console.log("sending data for the first time", contextData);
+        // console.log(currentCanvasPointer)
+        sendDataToPeer(contextData, currentCanvasPointer);
       }
     }
   }, [onBoard]);
@@ -333,7 +367,7 @@ const Secured = () => {
   const shapeOptions: Options = {
     stroke: strokeColor,
     strokeWidth: Number(strokeWidth),
-    fill: fillColor + "25",
+    fill: fillColor + "50",
     roughness: 1,
     curveStepCount: 99,
     bowing: 1,
@@ -459,7 +493,7 @@ const Secured = () => {
       const canvas = backgroundCanvasRef.current;
 
       if (canvas) {
-        const ctx = canvas.getContext("2d");
+        // const ctx = canvas.getContext("2d");
 
         // Create a new canvas with a black background
         const downloadCanvas = document.createElement("canvas");
@@ -496,7 +530,8 @@ const Secured = () => {
     }
   };
 
-  const handleDownload = () => {
+  //toremove
+  /* const handleDownload = () => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
@@ -522,7 +557,7 @@ const Secured = () => {
       link.href = downloadCanvas.toDataURL("image/png"); // Specify PNG format (optional)
       link.click();
     }
-  };
+  }; */
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -580,7 +615,7 @@ const Secured = () => {
   };
 
   return (
-    <div className="overflow-hidden d-flex justify-content-center align-items-center flex-column ">
+   <div className="overflow-hidden d-flex justify-content-center align-items-center flex-column ">
       <div style={tempstyle} className="vw-100 p-2">
         <div style={tempstyle2}>
           <div className="tagContainer">
@@ -590,6 +625,7 @@ const Secured = () => {
                 className="checkTag"
                 id="arrow"
                 type="radio"
+                defaultChecked
                 onClick={() => setElement("arrow")}
               />
               <label
@@ -687,7 +723,13 @@ const Secured = () => {
           />
 
           <label htmlFor="color">Fill Color: </label>
-          <input type="color" name="fillcolor" id="fillcolor" value={fillColor} onChange={(e)=> setfillColor(e.target.value)} />
+          <input
+            type="color"
+            name="fillcolor"
+            id="fillcolor"
+            value={fillColor}
+            onChange={(e) => setfillColor(e.target.value)}
+          />
 
           <label htmlFor="range">Size: </label>
           <input
@@ -700,6 +742,7 @@ const Secured = () => {
             value={strokeWidth}
             onChange={(e) => setstrokeWidth(e.target.value)}
           />
+          {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
           {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
         </div>
 
@@ -743,8 +786,8 @@ const Secured = () => {
           height={window.innerHeight - 175}
         />
       </div>
-    </div>
-  );
+    </div >
+  )
 };
 
 export default Secured;
@@ -754,7 +797,6 @@ export default Secured;
 // fix -1 sharing of context
 // undo redo functionality sync with peers
 
-
 // extra features to add -
 // 1. add a stg option where user can set
 //    - canvas bg color
@@ -762,5 +804,5 @@ export default Secured;
 //    - configure the shapeOptions like randomness etc
 
 //  Workings for socket io
-  //// - check the element updation if updated on peer 1 - send the context string to other peers and set them
+//// - check the element updation if updated on peer 1 - send the context string to other peers and set them
 ////   - share the context and set it on each new element generation\

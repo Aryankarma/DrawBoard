@@ -1,12 +1,10 @@
 .ErrorDiaouge{
-    /* background-color: #ffffff95; */
     color: rgb(255, 0, 0);
     padding: .6rem;
     text-align: center;
     width: fit-content;
-    z-index: 5;
     position: absolute;
-    top: 5%;
+    bottom: 10%;
     left: 50%;
     transform: translateX(-50%);
     background: rgba( 0,0,0, 0.3 );
@@ -18,10 +16,49 @@
     justify-content: center;
     font-size: 18px;
     gap: 10px;
-    /* font-size: 100; */
 }
 
 .emojiIcon{
     font-size: 22px;
+}
 
+.popupContainer{
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 4;
+    .popup-content{
+        position: relative;
+        background-color: white;
+        padding: 2rem;
+        /* padding-top: 2.5rem;  */
+        gap: 20px; 
+        border-radius: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: column;
+        .roominput{
+            border: 1px solid #00000050;
+            outline: none;
+            background-color: #222;
+            border-radius: 10px;
+            padding: 7.5px 10px;
+        }.roominput:hover{
+            transition: 500ms;
+            border: none;
+            border: 1px solid #646cff;
+            background-color: #161616;
+        }
+        .buttons{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+    }   
 }

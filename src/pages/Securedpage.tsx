@@ -9,10 +9,12 @@ import { FaRegCircle } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
 import { LuUndo2 } from "react-icons/lu";
 import { LuRedo2 } from "react-icons/lu";
+import { MdGroupAdd } from "react-icons/md";
 import { MdDownload } from "react-icons/md";
-import "./styles.css";
 import { FaPaintBrush } from "react-icons/fa";
+import "./styles.css";
 import { IoColorPaletteOutline } from "react-icons/io5";
+import CreateRoomPopup from "../components/createRoomPopup.tsx";
 
 import { useNavigate } from "react-router-dom";
 import { User, onAuthStateChanged } from "firebase/auth";
@@ -41,6 +43,7 @@ const Secured = () => {
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(-1);
 
   const [rerender, setrerender] = useState<number>(0);
+  const [popupStatus, setPopupStatus] = useState<boolean>(false)
 
   // auth
   const [userlocal, setUser] = useState< User | null>(null);
@@ -601,23 +604,22 @@ const Secured = () => {
     // console.log(contextData)
   };
 
-  const tempstyle = {
-    display: "flex",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-    gap: "10px",
-  };
+  // const tempstyle = {
+
+  // };
 
   const tempstyle2 = {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
   };
 
   return (
-   <div className="overflow-hidden d-flex justify-content-center align-items-center flex-column ">
-      <div style={tempstyle} className="vw-100 p-2">
-        <div style={tempstyle2}>
+    <div className="vw-100 vh-100 overflow-hidden d-flex justify-content-center align-items-center flex-column ">
+      <CreateRoomPopup
+        status={popupStatus}
+        onClose={() => setPopupStatus(!popupStatus)}
+      />
+
+      <div className="toolsContainer vw-100 p-2 mt-3">
+        <div className="colorBox">
           <div className="tagContainer">
             <div className="boxcontainer">
               <input
@@ -712,7 +714,7 @@ const Secured = () => {
           </div>
         </div>
 
-        <div style={tempstyle2}>
+        <div className="colorBox">
           <label htmlFor="color">Color: </label>
           <input
             type="color"
@@ -747,6 +749,14 @@ const Secured = () => {
         </div>
 
         <div style={{ scale: ".85" }}>
+          {/* create room btn */}
+          <button
+            className="ms-1 me-1 rounded-5 "
+            onClick={() => setPopupStatus(!popupStatus)}
+          >
+            <MdGroupAdd />
+          </button>
+
           <button
             className="ms-1 me-1 rounded-5 "
             onClick={() => resetCanvasWithBtn()}
@@ -775,34 +785,19 @@ const Secured = () => {
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          width={window.innerWidth - 100}
-          height={window.innerHeight - 175}
+          width={window.innerWidth}
+          height={window.innerHeight}
         />
 
         <canvas // send bg color
           ref={backgroundCanvasRef}
           // className="shadow-lg mt-3 mb-5 rounded-3"
-          width={window.innerWidth - 100}
-          height={window.innerHeight - 175}
+          width={window.innerWidth}
+          height={window.innerHeight}
         />
       </div>
-    </div >
-  )
+    </div>
+  );
 };
 
 export default Secured;
-
-// updates to do now -
-
-// fix -1 sharing of context
-// undo redo functionality sync with peers
-
-// extra features to add -
-// 1. add a stg option where user can set
-//    - canvas bg color
-//    - configure the element bg styles
-//    - configure the shapeOptions like randomness etc
-
-//  Workings for socket io
-//// - check the element updation if updated on peer 1 - send the context string to other peers and set them
-////   - share the context and set it on each new element generation\

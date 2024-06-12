@@ -24,7 +24,8 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, count }) => {
   return (
     visible && (
       <div className="ErrorDiaouge">
-        <HiOutlineXCircle className="emojiIcon" /> {message}
+        <HiOutlineXCircle className="emojiIcon" />
+        <h5 style={{marginBottom:"0"}}>{message}</h5>
       </div>
     )
   );

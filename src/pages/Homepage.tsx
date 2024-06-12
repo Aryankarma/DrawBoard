@@ -158,7 +158,8 @@ const Home = () => {
     <div>
       <ErrorMessage message={error} count={errorCount} />
 
-      <h4 className="text-green-800 text-4xl mt-5 text-center">
+    <div className="homeContainer">
+      <h4 className="welcomeLine text-green-800 text-4xl mt-5 text-center">
         Welcome to Collaboard!
       </h4>
       <div className="authContainer">
@@ -200,10 +201,11 @@ const Home = () => {
             </button>
             <button onClick={() => setLoginSignupStatus("login")}>
               Log in
-            </button>
-          </div>
-        )}
-      </div>
+              </button>
+            </div>
+          )}
+        </div>
+        </div>
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import Nav from "./components/Nav"
 import WelcomePage from "./pages/Homepage";
 import SecuredPage from "./pages/Securedpage";
-import PrivateRoute from "./helpers/PrivateRoute";
+// import PrivateRoute from "./helpers/PrivateRoute";
 
 
 function App() {
@@ -13,7 +13,7 @@ function App() {
  return (
   <div>
       <BrowserRouter>
-        <Nav />
+        {/* <Nav /> */}
         <Routes>
           
           <Route path="/" element={<WelcomePage />} />

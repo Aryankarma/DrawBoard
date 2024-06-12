@@ -19,7 +19,7 @@
 
 .thisislabel{
     font-size: 14px;
-    color: black;    /* background-color: ; */
+    color: black;
     font-weight: 600;
     padding: .5rem 1rem;
     border-radius: 10px;
@@ -47,17 +47,37 @@ input[type="radio"]:checked + label {
     box-shadow: 0 0 10px black !important;
 }
 
+.toolsContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10%;
+    position: absolute;
+    top: 0%;
+    div{
+        z-index:3;
+    }
+}
+
+.colorBox{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 canvas{
     box-shadow: 0 0 20px #00000080;
-    border-radius: 20px;
-    margin-top: 20px;
+    /* border-radius: 20px; */
+    /* margin-top: 20px; */
 }
 
 .canvasContainer {
     height: 100vh;
     width: 100vw;
-    position: relative;
+    position: absolute;
+    overflow: hidden;
     display: flex;
+    z-index: 2;
     align-items: center;
     justify-content: center;
     /* margin-top: 20px; */

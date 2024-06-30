@@ -18,7 +18,7 @@ import CreateRoomPopup from "../components/createRoomPopup.tsx";
 
 import { useNavigate } from "react-router-dom";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { auth } from '../firebaseConfig.ts'
+import { auth } from "../firebaseConfig.ts";
 import { RiH1 } from "react-icons/ri";
 
 const Secured = () => {
@@ -39,19 +39,23 @@ const Secured = () => {
 
   const [contextData, setContextData] = useState<string[][]>([]);
   const [latestContext, setLatestContext] = useState<string[][]>([]);
-  const [tempcontext, settempcontext] = useState<string[]>([]);
+  const [isContextDataUpdated, setIsContextDataUpdated] = useState(false);
+
+  // const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(-1);
 
-  const [rerender, setrerender] = useState<number>(0);
-  const [popupStatus, setPopupStatus] = useState<boolean>(false)
+  // const [rerender, setrerender] = useState<number>(0);
+  const [popupStatus, setPopupStatus] = useState<boolean>(false);
 
   // auth
-  const [userlocal, setUser] = useState< User | null>(null);
+  const [userlocal, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
+  
+  const isInitialMount = useRef(true);
+  
   // auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -59,7 +63,7 @@ const Secured = () => {
         setUser(currentUser);
       } else {
         setUser(null);
-        navigate("/")
+        // navigate("/")
       }
     });
 
@@ -67,13 +71,21 @@ const Secured = () => {
   }, [navigate]);
 
   // useEffect(() => {
-    // if (!userlocal) {
-    //   return <h1>Loading...</h1>
-    // }
+  // if (!userlocal) {
+  //   return <h1>Loading...</h1>
+  // }
   // }, [userlocal]);
 
   // sending data from client to server
   const sendDataToPeer = (contextData: string[][], canvasPointer: number) => {
+    // console.log(contextData.length)
+    // if (isInitialMount.current) {
+    //   isInitialMount.current = false;
+    //   setContextData([]);
+    //   return; // Skip the first execution
+    // }
+    // console.log("sending data to server");
+    // console.log(contextData)
     socket.emit(
       "ultimateSharing",
       contextData,
@@ -81,10 +93,15 @@ const Secured = () => {
     );
   };
 
+  // useEffect(() => {
+  //   // console.log("current context data: ")
+  //   // console.log(contextData);
+  // }, [contextData]);
+ 
   // recieving data from the server
   useEffect(() => {
-    socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
-      // console.log("ultimate input <<< ", ultimateContext);
+      socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
+      // console.log(ultimateContext);
       // console.log("ultimate input number <<< ", ultimateNumber);
       ultimateContext != null ? setContextData(ultimateContext) : null;
       // console.log(ultimateContext)
@@ -96,7 +113,7 @@ const Secured = () => {
       }
 
       if (ultimateContext[ultimateNumber - 1][0]) {
-        console.log("recieved context", ultimateContext[ultimateNumber][0]);
+        // console.log("recieved context", ultimateContext[ultimateNumber][0]);
 
         // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
         setTimeout(() => {
@@ -206,52 +223,82 @@ const Secured = () => {
     // console.log(contextData)
   }, [contextData]);
 
-  const saveCanvasContext = () => {
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
-      if (context) {
-        setContextData((prevdata) => [
-          ...prevdata,
-          [canvasRef.current!.toDataURL()],
-        ]);
-      }
-    }
-  };
+  // const saveCanvasContext = () => {
+  //   if (canvasRef.current) {
+  //     const context = canvasRef.current.getContext("2d");
+  //     if (context) {
+  //       setContextData((prevdata) => [
+  //         ...prevdata,
+  //         [canvasRef.current!.toDataURL()],
+  //       ]);
+  //     }
+  //   }
+  // };
 
-  const savebgCanvasContext = () => {
+  // const savebgCanvasContext = async () => {
+  //   if (backgroundCanvasRef.current) {
+  //     const context = backgroundCanvasRef.current.getContext("2d");
+  //     if (context) {
+  //       setContextData((prevdata) => [
+  //         ...prevdata,
+  //         [backgroundCanvasRef.current!.toDataURL()],
+  //       ]);
+  //     }
+  //   }
+  //   console.log("context data from sender ", contextData)
+  //   sendDataToPeer(contextData, currentCanvasPointer);
+  // };
+
+  // fixes drawing last element except current one...
+  useEffect(() => {
+    if (isContextDataUpdated) {
+      sendDataToPeer(contextData, currentCanvasPointer);
+      setIsContextDataUpdated(false);
+    }
+  }, [isContextDataUpdated, contextData, currentCanvasPointer]);
+
+  const savebgCanvasContext = async () => {
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
-        setContextData((prevdata) => [
-          ...prevdata,
-          [backgroundCanvasRef.current!.toDataURL()],
-        ]);
+        await new Promise((resolve) => {
+          setContextData((prevdata) => {
+            const updatedData = [
+              ...prevdata,
+              [backgroundCanvasRef.current!.toDataURL()],
+            ];
+            resolve(updatedData);
+            return updatedData;
+          });
+        });
+        setIsContextDataUpdated(true);
       }
     }
   };
 
-  const runthisonce = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        const dataURL = contextData[contextData.length - 1];
-        if (dataURL) {
-          const image = new Image();
-          image.onload = function () {
-            ctx.drawImage(image, 0, 0);
-          };
-          image.src = dataURL[0];
-        } else {
-          console.error("No data URL found in contextData");
-        }
-      } else {
-        console.error("Failed to get 2D context");
-      }
-    } else {
-      console.error("canvasRef.current is null or undefined");
-    }
-  };
+
+  // const runthisonce = () => {
+  //   const canvas = canvasRef.current;
+  //   if (canvas) {
+  //     const ctx = canvas.getContext("2d");
+  //     if (ctx) {
+  //       const dataURL = contextData[contextData.length - 1];
+  //       if (dataURL) {
+  //         const image = new Image();
+  //         image.onload = function () {
+  //           ctx.drawImage(image, 0, 0);
+  //         };
+  //         image.src = dataURL[0];
+  //       } else {
+  //         console.error("No data URL found in contextData");
+  //       }
+  //     } else {
+  //       console.error("Failed to get 2D context");
+  //     }
+  //   } else {
+  //     console.error("canvasRef.current is null or undefined");
+  //   }
+  // };
 
   const undoCanvasContext = () => {
     // console.log("undo canvas is triggered")
@@ -339,9 +386,9 @@ const Secured = () => {
           // Clear the temporary canvas
           drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
-        // console.log("sending data for the first time", contextData);
+        // console.log("sending data ");
         // console.log(currentCanvasPointer)
-        sendDataToPeer(contextData, currentCanvasPointer);
+        // sendDataToPeer(contextData, currentCanvasPointer);
       }
     }
   }, [onBoard]);
@@ -608,8 +655,6 @@ const Secured = () => {
 
   // };
 
-  const tempstyle2 = {
-  };
 
   return (
     <div className="vw-100 vh-100 overflow-hidden d-flex justify-content-center align-items-center flex-column ">

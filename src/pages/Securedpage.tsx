@@ -148,7 +148,7 @@ const Secured = () => {
   };
 
   useEffect(() => {
-    setCurrentCanvasPointer(contextData.length);
+    setCurrentCanvasPointer(contextData.length-1);
     setLatestContext([...contextData]);
     // console.log(contextData)
     // console.log("current canvas pointer from useEffect:", currentCanvasPointer);
@@ -270,7 +270,6 @@ const Secured = () => {
     }
   };
 
-
   // const runthisonce = () => {
   //   const canvas = canvasRef.current;
   //   if (canvas) {
@@ -295,7 +294,6 @@ const Secured = () => {
   // };
 
   const undoCanvasContext = () => {
-    // console.log("undo canvas is triggered")
     if (backgroundCanvasRef.current && contextData) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
@@ -303,21 +301,21 @@ const Secured = () => {
         image.onload = () => {
           // console.log("undo from peer")
           context.clearRect(
-            0,
+            0, 
             0,
             backgroundCanvasRef.current!.width,
             backgroundCanvasRef.current!.height
           );
           context.drawImage(image, 0, 0);
         };
-        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null;
         if (currentCanvasPointer <= 0) {
-          // notify that "nothing to undo"
+          image.src = contextData[0][0];
           return;
         }
+        // console.log(contextData);
+        // console.log(currentCanvasPointer)
         image.src = contextData[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1);
-        // console.log(image.src);
         sendDataToPeer(latestContext, currentCanvasPointer - 1);
       }
     }
@@ -328,7 +326,7 @@ const Secured = () => {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
         const image = new Image();
-        image.onload = () => {
+        image.onload = () => {currentCanvasPointer
           context.clearRect(
             0,
             0,
@@ -339,13 +337,14 @@ const Secured = () => {
         };
         // console.log("currentCanvasPointer when you redo ", currentCanvasPointer)
         // console.log("send data now ", currentCanvasPointer);
-        // currentCanvasPointer != 0 ? sendDataToPeer(latestContext) : null;
+        // currentCanvasPointer   != 0 ? sendDataToPeer(latestContext) : null;
         if (currentCanvasPointer >= contextData.length - 1) {
-          // notify that "nothing to redo
+          // notify that nothing to redo
           return;
         }
 
         image.src = contextData[currentCanvasPointer + 1][0];
+
         setCurrentCanvasPointer(currentCanvasPointer + 1);
         sendDataToPeer(latestContext, currentCanvasPointer + 1);
       }
@@ -353,12 +352,14 @@ const Secured = () => {
   };
 
   useEffect(() => {
-    console.log(contextData[currentCanvasPointer + 1]);
-  }, [contextData]);
+    console.log(contextData);
+    console.log(currentCanvasPointer);
+    console.log(contextData[currentCanvasPointer - 1]);
+  }, [contextData, currentCanvasPointer]);
 
-  useEffect(() => {
-    console.log(currentCanvasPointer)
-  }, [currentCanvasPointer]);
+  // useEffect(() => {
+  //   console.log(currentCanvasPointer)
+  // }, [currentCanvasPointer]);
 
   useEffect(() => {
     // console.log(currentCanvasPointer)
@@ -468,6 +469,7 @@ const Secured = () => {
     setCurrentCanvasPointer(0);
     setpathdata([]);
     setPathdataHistory([]);
+    savebgCanvasContext(); 
     sendDataToPeer(contextData, -10000);
   };
 
@@ -493,9 +495,6 @@ const Secured = () => {
     }
 
     if (!canvasRef.current) return;
-
-    // let linearPath = generator.linearPath(maindata.map((input) => [input[0], input[1]]), shapeOptions)
-    // roughCanvas.draw(linearPath)
 
     const roughCanvas = rough.canvas(canvasRef.current);
     const generator = roughCanvas.generator;
@@ -755,26 +754,26 @@ const Secured = () => {
           </div>
         </div>
 
-        <div className="colorBox">
-          {/* <label htmlFor="color">Color: </label>
+        {/* <div className="colorBox">
+          <label htmlFor="color">Color: </label>
           <input
             type="color"
             name="color"
             id="color"
             value={strokeColor}
             onChange={(e) => setcolorHex(e.target.value)}
-          /> */}
+          />
 
-          {/* <label htmlFor="color">Fill Color: </label>
+          <label htmlFor="color">Fill Color: </label>
           <input
             type="color"
             name="fillcolor"
             id="fillcolor"
             value={fillColor}
             onChange={(e) => setfillColor(e.target.value)}
-          /> */}
+          />
 
-          {/* <label htmlFor="range">Size: </label>
+          <label htmlFor="range">Size: </label>
           <input
             style={{ width: "7rem" }}
             type="range"
@@ -785,9 +784,9 @@ const Secured = () => {
             value={strokeWidth}
             onChange={(e) => setstrokeWidth(e.target.value)}
           /> */}
-          {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
-          {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
-        </div>
+        {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
+        {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
+        {/* </div> */}
 
         <div style={{ scale: ".85" }}>
           {/* create room btn */}

@@ -18,9 +18,9 @@ io.on("connection", (socket) => {
         console.log("user disconnected")
     })
 
-    socket.on("ultimateSharing", (input, inputNumber) => {
-        socket.broadcast.emit("ultimateSharing", input, inputNumber)
-        console.log("data recieved on server")
-        console.log(input);  
-    });
+  socket.on("ultimateSharing", (input, inputNumber) => {
+    socket.broadcast.emit("ultimateSharing", input, inputNumber);
+    console.log("data recieved on server");
+    console.log(input);
+  });
 })

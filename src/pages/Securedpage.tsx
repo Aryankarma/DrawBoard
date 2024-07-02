@@ -199,13 +199,7 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        // console.log(contextData[contextData.length - 1]);
-        // console.log("before: ", image.src)
         if (imageSource) {
-          // console.log('this is canvas pointer', canvasPointer)
-          // console.log("undo on other window so setting up another canvas")
-          // console.log(contextData[canvasPointer])
-          // console.log("inside redraw context ", contextData)
           // image.src = contextData[canvasPointer - 1][0];
           image.src = imageSource;
         }
@@ -358,10 +352,12 @@ const Secured = () => {
     }
   };
 
-  useEffect(() => {}, [contextData]);
+  useEffect(() => {
+    console.log(contextData[currentCanvasPointer + 1]);
+  }, [contextData]);
 
   useEffect(() => {
-    // console.log(currentCanvasPointer)
+    console.log(currentCanvasPointer)
   }, [currentCanvasPointer]);
 
   useEffect(() => {
@@ -760,25 +756,25 @@ const Secured = () => {
         </div>
 
         <div className="colorBox">
-          <label htmlFor="color">Color: </label>
+          {/* <label htmlFor="color">Color: </label>
           <input
             type="color"
             name="color"
             id="color"
             value={strokeColor}
             onChange={(e) => setcolorHex(e.target.value)}
-          />
+          /> */}
 
-          <label htmlFor="color">Fill Color: </label>
+          {/* <label htmlFor="color">Fill Color: </label>
           <input
             type="color"
             name="fillcolor"
             id="fillcolor"
             value={fillColor}
             onChange={(e) => setfillColor(e.target.value)}
-          />
+          /> */}
 
-          <label htmlFor="range">Size: </label>
+          {/* <label htmlFor="range">Size: </label>
           <input
             style={{ width: "7rem" }}
             type="range"
@@ -788,7 +784,7 @@ const Secured = () => {
             id="strokerange"
             value={strokeWidth}
             onChange={(e) => setstrokeWidth(e.target.value)}
-          />
+          /> */}
           {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
           {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
         </div>
@@ -846,3 +842,17 @@ const Secured = () => {
 };
 
 export default Secured;
+
+
+
+/*
+
+use this func to write text on canvas
+function draw() {
+  const ctx = document.getElementById("canvas").getContext("2d");
+  ctx.font = "48px serif";
+  ctx.fillText("Hello world", 10, 50);
+}
+
+draw();
+*/

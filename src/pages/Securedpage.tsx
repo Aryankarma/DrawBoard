@@ -53,9 +53,9 @@ const Secured = () => {
 
   const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  
+
   const isInitialMount = useRef(true);
-  
+
   // auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -78,43 +78,31 @@ const Secured = () => {
 
   // sending data from client to server
   const sendDataToPeer = (contextData: string[][], canvasPointer: number) => {
-    // console.log(contextData.length)
     // if (isInitialMount.current) {
     //   isInitialMount.current = false;
     //   setContextData([]);
     //   return; // Skip the first execution
     // }
-    // console.log("sending data to server");
-    // console.log(contextData)
     socket.emit(
       "ultimateSharing",
       contextData,
-      canvasPointer ? canvasPointer : -100
+      canvasPointer ? canvasPointer : -10000
     );
   };
 
   // useEffect(() => {
-  //   // console.log("current context data: ")
-  //   // console.log(contextData);
   // }, [contextData]);
- 
+
   // recieving data from the server
   useEffect(() => {
-      socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
-      // console.log(ultimateContext);
-      // console.log("ultimate input number <<< ", ultimateNumber);
+    socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
       ultimateContext != null ? setContextData(ultimateContext) : null;
-      // console.log(ultimateContext)
-      // console.log("not so ultimatcanvasPointer ? canvasPointer : -100 context : ", ultimateContext);
-      // console.log(ultimateContext[ultimateNumber - 1][0]);
 
       if (ultimateNumber == -10000) {
         resetPeerContext();
       }
-
+      console.log("ultimateNumber ", ultimateNumber);
       if (ultimateContext[ultimateNumber - 1][0]) {
-        // console.log("recieved context", ultimateContext[ultimateNumber][0]);
-
         // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
         setTimeout(() => {
           reDrawCanvasForUndoRedo(ultimateContext[ultimateNumber - 1][0]);
@@ -123,8 +111,6 @@ const Secured = () => {
     });
 
     return () => {
-      // socket.off("contextSharing");
-      // socket.off("canvasPointer")
       socket.off("ultimateSharing");
     };
   }, []);
@@ -148,24 +134,17 @@ const Secured = () => {
   };
 
   useEffect(() => {
-    setCurrentCanvasPointer(contextData.length-1);
+    setCurrentCanvasPointer(contextData.length - 1);
     setLatestContext([...contextData]);
-    // console.log(contextData)
-    // console.log("current canvas pointer from useEffect:", currentCanvasPointer);
-    // console.log("UPDAING CANVAS FOR PEER")
-    // console.log(contextData)
     reDrawCanvasUpdateContext();
-    // console.log("both context and currentCanvasPointer");
   }, [contextData]);
 
   const reDrawCanvasUpdateContext = () => {
-    // console.log("reDrawCanvasUpdateContext is running");
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
         const image = new Image();
         image.onload = () => {
-          // console.log("undo from peer")
           context.clearRect(
             0,
             0,
@@ -174,8 +153,6 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        // console.log("contextData for peer ", contextData);
-        // console.log("before: ", image.src)
         image.src = contextData[contextData.length - 1]
           ? contextData[contextData.length - 1][0]
           : "";
@@ -184,13 +161,11 @@ const Secured = () => {
   };
 
   const reDrawCanvasForUndoRedo = (imageSource: string) => {
-    // console.log("actual image source : ", imageSource);
     if (backgroundCanvasRef.current) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
         const image = new Image();
         image.onload = () => {
-          // console.log("undo from peer")
           context.clearRect(
             0,
             0,
@@ -214,20 +189,20 @@ const Secured = () => {
   }, [onBoard]);
 
   useEffect(() => {
-    // console.log(contextData)
-  }, [contextData]);
+    console.log(currentCanvasPointer)
+  }, [currentCanvasPointer]);
 
-  // const saveCanvasContext = () => {
-  //   if (canvasRef.current) {
-  //     const context = canvasRef.current.getContext("2d");
-  //     if (context) {
-  //       setContextData((prevdata) => [
-  //         ...prevdata,
-  //         [canvasRef.current!.toDataURL()],
-  //       ]);
-  //     }
-  //   }
-  // };
+  const saveCanvasContext = () => {
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      if (context) {
+        setContextData((prevdata) => [
+          ...prevdata,
+          [canvasRef.current!.toDataURL()],
+        ]);
+      }
+    }
+  };
 
   // const savebgCanvasContext = async () => {
   //   if (backgroundCanvasRef.current) {
@@ -239,14 +214,13 @@ const Secured = () => {
   //       ]);
   //     }
   //   }
-  //   console.log("context data from sender ", contextData)
   //   sendDataToPeer(contextData, currentCanvasPointer);
   // };
 
   // fixes drawing last element except current one...
   useEffect(() => {
     if (isContextDataUpdated) {
-      sendDataToPeer(contextData, currentCanvasPointer);
+      sendDataToPeer(contextData, currentCanvasPointer + 1);
       setIsContextDataUpdated(false);
     }
   }, [isContextDataUpdated, contextData, currentCanvasPointer]);
@@ -269,39 +243,15 @@ const Secured = () => {
       }
     }
   };
-
-  // const runthisonce = () => {
-  //   const canvas = canvasRef.current;
-  //   if (canvas) {
-  //     const ctx = canvas.getContext("2d");
-  //     if (ctx) {
-  //       const dataURL = contextData[contextData.length - 1];
-  //       if (dataURL) {
-  //         const image = new Image();
-  //         image.onload = function () {
-  //           ctx.drawImage(image, 0, 0);
-  //         };
-  //         image.src = dataURL[0];
-  //       } else {
-  //         console.error("No data URL found in contextData");
-  //       }
-  //     } else {
-  //       console.error("Failed to get 2D context");
-  //     }
-  //   } else {
-  //     console.error("canvasRef.current is null or undefined");
-  //   }
-  // };
-
+  
   const undoCanvasContext = () => {
     if (backgroundCanvasRef.current && contextData) {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
         const image = new Image();
         image.onload = () => {
-          // console.log("undo from peer")
           context.clearRect(
-            0, 
+            0,
             0,
             backgroundCanvasRef.current!.width,
             backgroundCanvasRef.current!.height
@@ -309,14 +259,12 @@ const Secured = () => {
           context.drawImage(image, 0, 0);
         };
         if (currentCanvasPointer <= 0) {
-          image.src = contextData[0][0];
+          // image.src = contextData[0][0];
           return;
         }
-        // console.log(contextData);
-        // console.log(currentCanvasPointer)
         image.src = contextData[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1);
-        sendDataToPeer(latestContext, currentCanvasPointer - 1);
+        sendDataToPeer(latestContext, currentCanvasPointer);
       }
     }
   };
@@ -326,7 +274,7 @@ const Secured = () => {
       const context = backgroundCanvasRef.current.getContext("2d");
       if (context) {
         const image = new Image();
-        image.onload = () => {currentCanvasPointer
+        image.onload = () => {
           context.clearRect(
             0,
             0,
@@ -335,34 +283,24 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        // console.log("currentCanvasPointer when you redo ", currentCanvasPointer)
-        // console.log("send data now ", currentCanvasPointer);
-        // currentCanvasPointer   != 0 ? sendDataToPeer(latestContext) : null;
+        
         if (currentCanvasPointer >= contextData.length - 1) {
           // notify that nothing to redo
           return;
         }
 
         image.src = contextData[currentCanvasPointer + 1][0];
-
         setCurrentCanvasPointer(currentCanvasPointer + 1);
-        sendDataToPeer(latestContext, currentCanvasPointer + 1);
+        sendDataToPeer(latestContext, currentCanvasPointer + 2);
       }
     }
   };
 
   useEffect(() => {
-    console.log(contextData);
-    console.log(currentCanvasPointer);
-    console.log(contextData[currentCanvasPointer - 1]);
   }, [contextData, currentCanvasPointer]);
 
-  // useEffect(() => {
-  //   console.log(currentCanvasPointer)
-  // }, [currentCanvasPointer]);
-
   useEffect(() => {
-    // console.log(currentCanvasPointer)
+
   }, []);
 
   // socket io
@@ -377,15 +315,11 @@ const Secured = () => {
         if (bgCtx && drawingCtx) {
           // Copy the temporary canvas to the background canvas without clearing it
           // send this to peer [drawingCanvas]
-          // console.log(drawingCanvas)
           bgCtx.drawImage(drawingCanvas, 0, 0);
 
           // Clear the temporary canvas
           drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
-        // console.log("sending data ");
-        // console.log(currentCanvasPointer)
-        // sendDataToPeer(contextData, currentCanvasPointer);
       }
     }
   }, [onBoard]);
@@ -450,7 +384,6 @@ const Secured = () => {
     // setCurrentCanvasPointer(0);
     setpathdata([]);
     setPathdataHistory([]);
-    // console.log("resetting canvas")
   };
 
   const resetCanvasWithBtn = () => {
@@ -469,7 +402,7 @@ const Secured = () => {
     setCurrentCanvasPointer(0);
     setpathdata([]);
     setPathdataHistory([]);
-    savebgCanvasContext(); 
+    savebgCanvasContext();
     sendDataToPeer(contextData, -10000);
   };
 
@@ -548,7 +481,7 @@ const Secured = () => {
 
         if (downloadCtx) {
           // Fill the new canvas with black background
-          downloadCtx.fillStyle = "#212529";
+          downloadCtx.fillStyle = "#151515";
           downloadCtx.fillRect(
             0,
             0,
@@ -575,42 +508,11 @@ const Secured = () => {
     }
   };
 
-  //toremove
-  /* const handleDownload = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-
-      // Create a new canvas with a black background
-      const downloadCanvas = document.createElement("canvas");
-      downloadCanvas.width = canvas.width;
-      downloadCanvas.height = canvas.height;
-      const downloadCtx = downloadCanvas.getContext("2d");
-
-      if (downloadCtx) {
-        // Fill the new canvas with black background
-        downloadCtx.fillStyle = "#212529";
-        downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
-
-        // Draw the existing content onto the new canvas with black background
-        downloadCtx.drawImage(canvas, 0, 0);
-      }
-
-      // Download the new canvas with black background
-      const link = document.createElement("a");
-      link.download = "whiteboard.png"; // Use PNG for transparent backgrounds (optional)
-      link.href = downloadCanvas.toDataURL("image/png"); // Specify PNG format (optional)
-      link.click();
-    }
-  }; */
-
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     setOnBoard(true);
     setMouseDown([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
     if (elementName === "brush") setbrushDown(true);
-    // console.log(mouseDown[0], mouseDown[1])
-    // console.log( e.nativeEvent.offsetX, e.nativeEvent.offsetY)44
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -632,23 +534,11 @@ const Secured = () => {
     e.preventDefault();
     setMouseUp([e.nativeEvent.offsetX, e.nativeEvent.offsetY]);
     setOnBoard(false);
-    // console.log(mouseUp[0], mouseUp[1])
     if (brushDown === true)
       setPathdataHistory((prevHistory) => [...prevHistory, pathdata]);
     setpathdata([]);
     setbrushDown(false);
-    // console.log(pathdataHistory)
-
-    // saveCanvasContext()
-    // runthisonce()
-
-    // console.log(pathdataHistory);
-    // console.log(contextData)
   };
-
-  // const tempstyle = {
-
-  // };
 
 
   return (
@@ -842,8 +732,6 @@ const Secured = () => {
 
 export default Secured;
 
-
-
 /*
 
 use this func to write text on canvas
@@ -854,4 +742,5 @@ function draw() {
 }
 
 draw();
+
 */

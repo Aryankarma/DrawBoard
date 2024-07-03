@@ -21,6 +21,6 @@ io.on("connection", (socket) => {
   socket.on("ultimateSharing", (input, inputNumber) => {
     socket.broadcast.emit("ultimateSharing", input, inputNumber);
     console.log("data recieved on server");
-    console.log(input);
+    // console.log(input);
   });
 })

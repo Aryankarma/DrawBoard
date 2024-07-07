@@ -1,64 +1,124 @@
-.ErrorDiaouge{
-    color: rgb(255, 0, 0);
-    padding: .6rem;
-    text-align: center;
-    width: fit-content;
-    position: absolute;
-    bottom: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba( 0,0,0, 0.3 );
-    border-radius: 10px;
-    border: 2px solid rgba( 255, 255, 255, 0.15 );
-    box-shadow: 0 6px 30px 0 rgba(255, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    gap: 10px;
+.ErrorDiaouge {
+  color: rgb(255, 0, 0);
+  padding: 0.6rem;
+  text-align: center;
+  width: fit-content;
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 30px 0 rgba(255, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  gap: 10px;
 }
 
-.emojiIcon{
-    font-size: 22px;
+.emojiIcon {
+  font-size: 22px;
 }
 
-.popupContainer{
-    position: absolute;
-    height: 100vh;
-    width: 100vw;
+.popupContainer {
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 4;
+  .popup-content {
+    position: relative;
+    background-color: white;
+    padding: 2rem;
+    /* padding-top: 2.5rem;  */
+    gap: 20px;
+    border-radius: 15px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 4;
-    .popup-content{
-        position: relative;
+    flex-direction: column;
+    .boxcontainer{
+        width: 50%;
+    }
+    .roomLabel{
+        text-align: center;
+        width: 100%;
+        padding: .5rem;
+        /* background-color: black; */
+        background-color: #252525 !important;
+        color: grey;
+    }.roomInput {
+      appearance: none !important;
+      position: absolute !important;
+    }
+    .roomInput:hover {
+        appearance: none !important;
+        transition: 500ms;
+    }
+    .roomInput:hover + .roomLabel {
+      opacity: 0.95;
+      transition: 300ms ease-in-out;
+    }
+    .roomLabel1 {
+      border-top-left-radius: 15px;
+      border-bottom-left-radius: 15px;
+    }
+    .roomLabel2 {
+      border-top-right-radius: 15px;
+      border-bottom-right-radius: 15px;
+
+    }
+    input[type="radio"]:checked + label {
+        background-color: black !important;
+        color: white;
+        box-shadow: 0 0 15px #777 !important;
+    }
+    .inputContainer{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      input{
+        outline: none;
         background-color: white;
-        padding: 2rem;
-        /* padding-top: 2.5rem;  */
-        gap: 20px; 
-        border-radius: 18px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-direction: column;
-        .roominput{
-            border: 1px solid #00000050;
-            outline: none;
-            background-color: #222;
-            border-radius: 10px;
-            padding: 7.5px 10px;
-        }.roominput:hover{
-            transition: 500ms;
-            border: none;
-            border: 1px solid #646cff;
-            background-color: #161616;
-        }
-        .buttons{
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            width: 100%;
-        }
-    }   
+        color: black;
+        border: 1px solid #777;
+        border-radius: 5px;
+        /* border: none; */
+        padding: 3px 7px;
+      }
+    }
+    .cancelBTn{
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(50%, -50%);
+      height: 30px;
+      width: 30px;
+      border-radius: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      }
+    .buttons,
+    .options {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+      p{
+        margin: 0;
+      }
+    }
+    .options{
+      border-radius: 15px;
+      outline: 7px solid #fff;
+      z-index: 2;
+    }
+  }
 }

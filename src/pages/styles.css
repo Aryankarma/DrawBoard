@@ -128,3 +128,8 @@ canvas{
         border: 1px solid #161616;  
     }
 }
+
+#color, #fillcolor{
+    outline: none;
+    border: none;
+}

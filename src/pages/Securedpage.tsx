@@ -1,25 +1,20 @@
-// import RoughCanvas, {ref} from "../components/RoughCanvas";
-import { useRef, useState, useEffect, createElement } from "react";
+import { useRef, useState, useEffect } from "react";
+import "./styles.css";
 import rough from "roughjs";
 import { socket } from "../socket.ts";
 import { Options } from "roughjs/bin/core";
-import { LuBrush, LuPencil } from "react-icons/lu";
+import { LuBrush } from "react-icons/lu";
 import { FiDownload, FiMinus, FiMousePointer, FiSquare } from "react-icons/fi";
 import { FaRegCircle } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
 import { LuUndo2 } from "react-icons/lu";
 import { LuRedo2 } from "react-icons/lu";
-import { MdGroupAdd } from "react-icons/md";
-import { MdDownload } from "react-icons/md";
-import { FaPaintBrush } from "react-icons/fa";
-import "./styles.css";
-import { IoColorPaletteOutline } from "react-icons/io5";
+import { MdGroups, MdOutlineGroupAdd } from "react-icons/md";
+// import { IoColorPaletteOutline } from "react-icons/io5";
 import CreateRoomPopup from "../components/createRoomPopup.tsx";
-
 import { useNavigate } from "react-router-dom";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig.ts";
-import { RiH1 } from "react-icons/ri";
 
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -46,6 +41,8 @@ const Secured = () => {
 
   // const [rerender, setrerender] = useState<number>(0);
   const [popupStatus, setPopupStatus] = useState<boolean>(false);
+  const [joinedRoomName, setJoinedRoomName] = useState("");
+  const [inRoom, setInRoom] = useState(false);
 
   // auth
   const [userlocal, setUser] = useState<User | null>(null);
@@ -83,15 +80,27 @@ const Secured = () => {
     //   setContextData([]);
     //   return; // Skip the first execution
     // }
-    socket.emit(
+
+    {
+      joinedRoomName != ""
+    ? socket.emit(
       "ultimateSharing",
       contextData,
-      canvasPointer ? canvasPointer : -10000
-    );
+      canvasPointer ? canvasPointer : -10000, joinedRoomName
+    ) : socket.emit(
+      "ultimateSharing",
+      contextData,
+      canvasPointer ?  canvasPointer : -10000
+    )}
   };
 
-  // useEffect(() => {
-  // }, [contextData]);
+  const leaveRoom = (roomName: string) => {
+    socket.emit("leaveRoom", roomName);
+  };
+
+  useEffect(() => {
+    console.log(joinedRoomName);
+  }, [joinedRoomName]);
 
   // recieving data from the server
   useEffect(() => {
@@ -101,7 +110,6 @@ const Secured = () => {
       if (ultimateNumber == -10000) {
         resetPeerContext();
       }
-      console.log("ultimateNumber ", ultimateNumber);
       if (ultimateContext[ultimateNumber - 1][0]) {
         // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
         setTimeout(() => {
@@ -114,6 +122,35 @@ const Secured = () => {
       socket.off("ultimateSharing");
     };
   }, []);
+
+    useEffect(() => {
+      socket.on("roomCreated", (msg) => {
+        alert(msg);
+      });
+
+      socket.on("roomJoined", (msg, roomName) => {
+        alert(msg);
+        setJoinedRoomName(roomName);
+        setInRoom(true);
+      });
+
+      socket.on("roomError", (msg) => {
+        alert("Error: " + msg);
+      });
+
+      socket.on("roomLeft", (msg) => {
+        alert(msg);
+        setInRoom(false);
+      });
+
+      return () => {
+        socket.off("roomCreated");
+        socket.off("roomJoined");
+        socket.off("roomError");
+        socket.off("roomLeft");
+      };
+    });
+
 
   const resetPeerContext = () => {
     if (backgroundCanvasRef.current) {
@@ -188,9 +225,9 @@ const Secured = () => {
     }
   }, [onBoard]);
 
-  useEffect(() => {
-    console.log(currentCanvasPointer)
-  }, [currentCanvasPointer]);
+  // useEffect(() => {
+    // console.log(currentCanvasPointer)
+  // }, [currentCanvasPointer]);
 
   const saveCanvasContext = () => {
     if (canvasRef.current) {
@@ -298,10 +335,7 @@ const Secured = () => {
 
   useEffect(() => {
   }, [contextData, currentCanvasPointer]);
-
-  useEffect(() => {
-
-  }, []);
+  
 
   // socket io
   useEffect(() => {
@@ -546,6 +580,7 @@ const Secured = () => {
       <CreateRoomPopup
         status={popupStatus}
         onClose={() => setPopupStatus(!popupStatus)}
+        setInRoomFunc={() => setInRoom(false)}
       />
 
       <div className="toolsContainer vw-100 p-2 mt-3">
@@ -644,9 +679,10 @@ const Secured = () => {
           </div>
         </div>
 
-        {/* <div className="colorBox">
-          <label htmlFor="color">Color: </label>
+        <div className="colorBox">
+          {/* <label htmlFor="color">Color: </label> */}
           <input
+            style={{ backgroundColor: strokeColor }}
             type="color"
             name="color"
             id="color"
@@ -654,8 +690,9 @@ const Secured = () => {
             onChange={(e) => setcolorHex(e.target.value)}
           />
 
-          <label htmlFor="color">Fill Color: </label>
+          {/* <label htmlFor="color">Fill Color: </label> */}
           <input
+            style={{ backgroundColor: fillColor }}
             type="color"
             name="fillcolor"
             id="fillcolor"
@@ -673,18 +710,19 @@ const Secured = () => {
             id="strokerange"
             value={strokeWidth}
             onChange={(e) => setstrokeWidth(e.target.value)}
-          /> */}
-        {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
-        {/* <input type="range" className="" max={25} name="strokerange" id="strokerange" value={strokeWidth} onChange={(e)=> setstrokeWidth(e.target.value)} /> */}
-        {/* </div> */}
+          />
+          {/* <p>Email: {userlocal ? userlocal.email : null}</p> */}
+        </div>
 
         <div style={{ scale: ".85" }}>
           {/* create room btn */}
           <button
             className="ms-1 me-1 rounded-5 "
-            onClick={() => setPopupStatus(!popupStatus)}
+            onClick={() =>
+              inRoom ? leaveRoom(joinedRoomName) : setPopupStatus(!popupStatus)
+            }
           >
-            <MdGroupAdd />
+            {!inRoom ? <MdOutlineGroupAdd /> : <MdGroups />}
           </button>
 
           <button
@@ -705,6 +743,9 @@ const Secured = () => {
           >
             <FiDownload />
           </button>
+          {/* <button className="btntemp ms-1 me-1 rounded-5">
+            <p style={{margin:"0"}}>{joinedRoomName != "" ? joinedRoomName : 0 }</p>
+          </button> */}
         </div>
       </div>
 

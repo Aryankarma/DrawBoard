@@ -42,7 +42,7 @@ const io = new Server({
   },
 });
 
-io.listen(4000);
+io.listen(process.env.PORT || 4000);
 console.log("server io is running on 4000");
 
 const rooms = new Map();
@@ -121,6 +121,3 @@ io.on("connection", (socket) => {
     // }
   });
 });
-
-// close the popup once room created or joined.
-// show joined room name on the client side

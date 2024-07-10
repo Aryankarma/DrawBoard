@@ -42,7 +42,7 @@ const io = new Server({
   },
 });
 
-io.listen(import.meta.env.VITE_PORT || 4000);
+io.listen(4000);
 console.log("server io is running on 4000");
 
 const rooms = new Map();

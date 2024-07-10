@@ -72,6 +72,16 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
+# Firebase
+.firebase/
+.firebaserc
+
+# GitHub
+.github/
+
+# build
+dist/
+
 # dotenv environment variable files
 .env
 .env.development.local

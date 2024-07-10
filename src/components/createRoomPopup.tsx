@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./componentStyles.css";
-import { MdCancel } from "react-icons/md";
 import { socket } from "../socket.ts";
 
 interface PopupProps {
@@ -14,7 +13,6 @@ const CreateRoomPopup: React.FC<PopupProps> = ({
   onClose,
   setInRoomFunc,
 }) => {
-
   const CreateJoinRoom = () => {
     if (!room || !password || !userName) {
       alert("all fields are required!");

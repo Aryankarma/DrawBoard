@@ -9,9 +9,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   getRedirectResult,
-  signOut,
+  // signOut,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 import ErrorMessage from "../components/ErrorMessage";
 import "./styles.css";
 
@@ -36,82 +35,64 @@ auth.useDeviceLanguage();
 //   login_hint: "user@example.com",
 // });
 
-
 const Home = () => {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [authState, setAuthState] = useState(auth);
   const [error, setError] = useState("");
   const [errorCount, setErrorCount] = useState(0);
-  const [loginSignupStatus, setLoginSignupStatus] = useState("login")
+  const [loginSignupStatus, setLoginSignupStatus] = useState("login");
 
   const navigate = useNavigate();
 
-
   const googleSignin = () => {
     signInWithPopup(auth, provider)
-    .then((result) => {
-      // This gives you a Google Access Token. You can use it to access the Google API.
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential!.accessToken;
-      // The signed-in user info.
-      const user = result.user;
-      // as auth state has now changed
-      console.log(user);
-      setAuthState(auth)
-      navigate("/secured");
-    })
-    .catch((error) => {
-      // Handle Errors here.
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      const showError = errorMessage.replace("Firebase: ", "").trim();
-      setError(showError);
-      setErrorCount(errorCount + 1);
-      // const email = error.customData.email;
-      // const credential = GoogleAuthProvider.credentialFromError(error);
-    });
-  }
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        // const credential = GoogleAuthProvider.credentialFromResult(result);
+        // const token = credential!.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+        // as auth state has now changed
+        console.log(user);
+        setAuthState(auth);
+        navigate("/secured");
+      })
+      .catch((error) => {
+        // Handle Errors here.
+
+        const errorMessage = error.message;
+        const showError = errorMessage.replace("Firebase: ", "").trim();
+        setError(showError);
+        setErrorCount(errorCount + 1);
+        // const email = error.customData.email;
+        // const credential = GoogleAuthProvider.credentialFromError(error);
+      });
+  };
 
   useEffect(() => {
     // console.log("auth state change")
-      getRedirectResult(auth)
-        .then((result) => {
-          // This gives you a Google Access Token. You can use it to access Google APIs.
-          const credential = GoogleAuthProvider.credentialFromResult(result!);
-          const token = credential!.accessToken;
+    getRedirectResult(auth)
+      .then((_) => {})
+      .catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+      });
+  }, [authState]);
 
-          // The signed-in user info.
-          const user = result!.user;
-          // console.log(user)
-          // IdP data available using getAdditionalUserInfo(result)
-          // ...
-        })
-        .catch((error) => {
-          // Handle Errors here.
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          // console.log("User has not authenticated yet.");
-          // The email of the user's account used.
-          // const email = error.customData.email;
-          // The AuthCredential type that was used.
-          // const credential = GoogleAuthProvider.credentialFromError(error);
-          // ...
-        });
-  }, [authState])
-
-
-  const googleSignout = ()=> {
-    signOut(auth)
-      .then(() => {
-        console.log("sign out done");
-        // as auth state has now changed
-        setAuthState(auth);
-      })
-        .catch((error) => {
-          console.error(error)  
-        });
-  }
+  // const googleSignout = ()=> {
+  //   signOut(auth)
+  //     .then(() => {
+  //       console.log("sign out done");
+  //       // as auth state has now changed
+  //       setAuthState(auth);
+  //     })
+  //       .catch((error) => {
+  //         console.error(error)
+  //       });
+  // }
 
   const handleSignup = () => {
     createUserWithEmailAndPassword(auth, email, pass)
@@ -127,14 +108,13 @@ const Home = () => {
         navigate("/secured");
       })
       .catch((error) => {
-        const errorCode = error.code;
+        // const errorCode = error.code;
         const errorMessage = error.message;
         const showError = errorMessage.replace("Firebase: ", "").trim();
         setError(showError);
         setErrorCount(errorCount + 1);
       });
   };
-
 
   const handleLogin = () => {
     const auth = getAuth();
@@ -146,66 +126,66 @@ const Home = () => {
         navigate("/secured");
       })
       .catch((error) => {
-        const errorCode = error.code;
+        // const errorCode = error.code;
         const errorMessage = error.message;
         const showError = errorMessage.replace("Firebase: ", "").trim();
         setError(showError);
         setErrorCount(errorCount + 1);
       });
-  }
+  };
 
   return (
     <div>
       <ErrorMessage message={error} count={errorCount} />
 
-    <div className="homeContainer">
-      <h4 className="welcomeLine text-green-800 text-4xl mt-5 text-center">
-        Welcome to Collaboard!
-      </h4>
-      <div className="authContainer">
-        <input
-          type="email"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          name="pass"
-          id="pass"
-          placeholder="Password"
-          onChange={(e) => setPass(e.target.value)}
-        />
-        {loginSignupStatus == "login" ? (
-          <div>
-            <button type="submit" className="mainbtn" onClick={handleLogin}>
-              Log in
-            </button>
-            <hr />
-            <button className="btn-center" onClick={googleSignin}>
-              {" "}
-              <FaGoogle /> Continue with Google
-            </button>
-            <button onClick={() => setLoginSignupStatus("signup")}>
-              Sign up
-            </button>
-          </div>
-        ) : (
-          <div>
-            <button type="submit" className="mainbtn" onClick={handleSignup}>
-              Sign up
-            </button>
-            <hr />
-            <button className="btn-center" onClick={googleSignin}>
-              {" "}
-              <FaGoogle /> Continue with Google
-            </button>
-            <button onClick={() => setLoginSignupStatus("login")}>
-              Log in
+      <div className="homeContainer">
+        <h4 className="welcomeLine text-green-800 text-4xl mt-5 text-center">
+          Welcome to Collaboard!
+        </h4>
+        <div className="authContainer">
+          <input
+            type="email"
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            name="pass"
+            id="pass"
+            placeholder="Password"
+            onChange={(e) => setPass(e.target.value)}
+          />
+          {loginSignupStatus == "login" ? (
+            <div>
+              <button type="submit" className="mainbtn" onClick={handleLogin}>
+                Log in
+              </button>
+              <hr />
+              <button className="btn-center" onClick={googleSignin}>
+                {" "}
+                <FaGoogle /> Continue with Google
+              </button>
+              <button onClick={() => setLoginSignupStatus("signup")}>
+                Sign up
+              </button>
+            </div>
+          ) : (
+            <div>
+              <button type="submit" className="mainbtn" onClick={handleSignup}>
+                Sign up
+              </button>
+              <hr />
+              <button className="btn-center" onClick={googleSignin}>
+                {" "}
+                <FaGoogle /> Continue with Google
+              </button>
+              <button onClick={() => setLoginSignupStatus("login")}>
+                Log in
               </button>
             </div>
           )}
         </div>
-        </div>
+      </div>
     </div>
   );
 };

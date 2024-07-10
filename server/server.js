@@ -18,14 +18,12 @@
 //     console.log("user disconnected")
 //   })
 
-//   // create room 
-  
-  
+//   // create room
+
 //   // join room
-  
-  
+
 //   // leaving room
-  
+
 //   //  handling ultimateSharing when within the room
 //   socket.on("ultimateSharing", (input, inputNumber) => {
 //     socket.broadcast.emit("ultimateSharing", input, inputNumber);
@@ -33,14 +31,8 @@
 //   });
 // })
 
-
-
-
-
-
-
 import { Server } from "socket.io";
-import crypto from 'crypto'
+import crypto from "crypto";
 
 const io = new Server({
   maxHttpBufferSize: 1e8,
@@ -56,7 +48,7 @@ console.log("server io is running on 4000");
 const rooms = new Map();
 
 function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest('hex');
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 io.on("connection", (socket) => {
@@ -96,7 +88,8 @@ io.on("connection", (socket) => {
         console.log(`user ${userName} joined the room ${roomName}`);
         socket.emit(
           "roomJoined",
-          `User "${userName}" joined the room "${roomName}"`, roomName
+          `User "${userName}" joined the room "${roomName}"`,
+          roomName
         );
       } else {
         socket.emit("roomError", "Wrong password!");
@@ -111,12 +104,11 @@ io.on("connection", (socket) => {
     console.log(`left room: ${roomName}`);
   });
 
-  // handle ultimate sharing function 
+  // handle ultimate sharing function
   socket.on("ultimateSharing", (input, inputNumber, roomName) => {
-
     // just temporary fix, make sure it does not send the data to the server if the room is not created!
     if (roomName == undefined) {
-      console.log("Room has not created yet!")
+      console.log("Room has not created yet!");
       return;
     }
 

@@ -15,10 +15,11 @@ import CreateRoomPopup from "../components/createRoomPopup.tsx";
 import { useNavigate } from "react-router-dom";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig.ts";
+import ColorPicker from "../components/ColorPicker.tsx";
 
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [mouseUp, setMouseUp] = useState<[number, number]>([0, 0]);
+  const [, setMouseUp] = useState<[number, number]>([0, 0]);
   const [mouseDown, setMouseDown] = useState<[number, number]>([0, 0]);
   const [mouseMove, setMouseMove] = useState<[number, number]>([0, 0]);
   const [strokeColor, setcolorHex] = useState<string>("#ffffff");
@@ -28,7 +29,7 @@ const Secured = () => {
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element
 
   const [pathdata, setpathdata] = useState<number[][]>([]);
-  const [pathdataHistory, setPathdataHistory] = useState<number[][][]>([]); // brush
+  const [, setPathdataHistory] = useState<number[][][]>([]); // brush
   const [brushDown, setbrushDown] = useState(false);
   const [onBoard, setOnBoard] = useState(false);
 
@@ -45,13 +46,10 @@ const Secured = () => {
   const [inRoom, setInRoom] = useState(false);
 
   // auth
-  const [userlocal, setUser] = useState<User | null>(null);
+  const [_, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  const drawingCanvasRef = useRef(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  const isInitialMount = useRef(true);
 
   // auth
   useEffect(() => {
@@ -60,7 +58,7 @@ const Secured = () => {
         setUser(currentUser);
       } else {
         setUser(null);
-        // navigate("/")
+        navigate("/");
       }
     });
 
@@ -83,15 +81,18 @@ const Secured = () => {
 
     {
       joinedRoomName != ""
-    ? socket.emit(
-      "ultimateSharing",
-      contextData,
-      canvasPointer ? canvasPointer : -10000, joinedRoomName
-    ) : socket.emit(
-      "ultimateSharing",
-      contextData,
-      canvasPointer ?  canvasPointer : -10000
-    )}
+        ? socket.emit(
+            "ultimateSharing",
+            contextData,
+            canvasPointer ? canvasPointer : -10000,
+            joinedRoomName
+          )
+        : socket.emit(
+            "ultimateSharing",
+            contextData,
+            canvasPointer ? canvasPointer : -10000
+          );
+    }
   };
 
   const leaveRoom = (roomName: string) => {
@@ -123,34 +124,33 @@ const Secured = () => {
     };
   }, []);
 
-    useEffect(() => {
-      socket.on("roomCreated", (msg) => {
-        alert(msg);
-      });
-
-      socket.on("roomJoined", (msg, roomName) => {
-        alert(msg);
-        setJoinedRoomName(roomName);
-        setInRoom(true);
-      });
-
-      socket.on("roomError", (msg) => {
-        alert("Error: " + msg);
-      });
-
-      socket.on("roomLeft", (msg) => {
-        alert(msg);
-        setInRoom(false);
-      });
-
-      return () => {
-        socket.off("roomCreated");
-        socket.off("roomJoined");
-        socket.off("roomError");
-        socket.off("roomLeft");
-      };
+  useEffect(() => {
+    socket.on("roomCreated", (msg) => {
+      alert(msg);
     });
 
+    socket.on("roomJoined", (msg, roomName) => {
+      alert(msg);
+      setJoinedRoomName(roomName);
+      setInRoom(true);
+    });
+
+    socket.on("roomError", (msg) => {
+      alert("Error: " + msg);
+    });
+
+    socket.on("roomLeft", (msg) => {
+      alert(msg);
+      setInRoom(false);
+    });
+
+    return () => {
+      socket.off("roomCreated");
+      socket.off("roomJoined");
+      socket.off("roomError");
+      socket.off("roomLeft");
+    };
+  });
 
   const resetPeerContext = () => {
     if (backgroundCanvasRef.current) {
@@ -226,20 +226,20 @@ const Secured = () => {
   }, [onBoard]);
 
   // useEffect(() => {
-    // console.log(currentCanvasPointer)
+  // console.log(currentCanvasPointer)
   // }, [currentCanvasPointer]);
 
-  const saveCanvasContext = () => {
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
-      if (context) {
-        setContextData((prevdata) => [
-          ...prevdata,
-          [canvasRef.current!.toDataURL()],
-        ]);
-      }
-    }
-  };
+  // const saveCanvasContext = () => {
+  //   if (canvasRef.current) {
+  //     const context = canvasRef.current.getContext("2d");
+  //     if (context) {
+  //       setContextData((prevdata) => [
+  //         ...prevdata,
+  //         [canvasRef.current!.toDataURL()],
+  //       ]);
+  //     }
+  //   }
+  // };
 
   // const savebgCanvasContext = async () => {
   //   if (backgroundCanvasRef.current) {
@@ -280,7 +280,7 @@ const Secured = () => {
       }
     }
   };
-  
+
   const undoCanvasContext = () => {
     if (backgroundCanvasRef.current && contextData) {
       const context = backgroundCanvasRef.current.getContext("2d");
@@ -320,7 +320,7 @@ const Secured = () => {
           );
           context.drawImage(image, 0, 0);
         };
-        
+
         if (currentCanvasPointer >= contextData.length - 1) {
           // notify that nothing to redo
           return;
@@ -333,9 +333,7 @@ const Secured = () => {
     }
   };
 
-  useEffect(() => {
-  }, [contextData, currentCanvasPointer]);
-  
+  useEffect(() => {}, [contextData, currentCanvasPointer]);
 
   // socket io
   useEffect(() => {
@@ -574,7 +572,6 @@ const Secured = () => {
     setbrushDown(false);
   };
 
-
   return (
     <div className="vw-100 vh-100 overflow-hidden d-flex justify-content-center align-items-center flex-column ">
       <CreateRoomPopup
@@ -681,24 +678,9 @@ const Secured = () => {
 
         <div className="colorBox">
           {/* <label htmlFor="color">Color: </label> */}
-          <input
-            style={{ backgroundColor: strokeColor }}
-            type="color"
-            name="color"
-            id="color"
-            value={strokeColor}
-            onChange={(e) => setcolorHex(e.target.value)}
-          />
 
-          {/* <label htmlFor="color">Fill Color: </label> */}
-          <input
-            style={{ backgroundColor: fillColor }}
-            type="color"
-            name="fillcolor"
-            id="fillcolor"
-            value={fillColor}
-            onChange={(e) => setfillColor(e.target.value)}
-          />
+          <ColorPicker colorValue={strokeColor} setColorValue={setcolorHex} />
+          <ColorPicker colorValue={fillColor} setColorValue={setfillColor} />
 
           <label htmlFor="range">Size: </label>
           <input
@@ -751,7 +733,7 @@ const Secured = () => {
 
       <div className="canvasContainer">
         <canvas
-          // className="shadow-lg mt-3 mb-5 rounded-3"
+          className="shadow-lg mt-3 mb-5 rounded-3"
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}

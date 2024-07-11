@@ -77,7 +77,6 @@ web_modules/
 .firebaserc
 
 # GitHub
-.github/
 
 # build
 dist/

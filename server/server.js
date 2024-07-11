@@ -38,7 +38,7 @@ const io = new Server({
   maxHttpBufferSize: 1e8,
   pingTimeout: 6000,
   cors: {
-    origin: "https://drawboard10.web.app"
+    origin: ["https://drawboard10.web.app", "http://localhost:5173"],
   },
 });
 

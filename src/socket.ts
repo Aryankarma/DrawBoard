@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
 
-const url = "http://localhost:4000";
+const url = "https://drawboard-0fw2.onrender.com";
 
 export const socket = io(url);

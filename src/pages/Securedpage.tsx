@@ -23,7 +23,7 @@ const Secured = () => {
   const [mouseDown, setMouseDown] = useState<[number, number]>([0, 0]);
   const [mouseMove, setMouseMove] = useState<[number, number]>([0, 0]);
   const [strokeColor, setcolorHex] = useState<string>("#ffffff");
-  const [fillColor, setfillColor] = useState<string>("#fafafa");
+  const [fillColor, setfillColor] = useState<string>("#000");
   const [strokeWidth, setstrokeWidth] = useState<string>("1");
   const [elementName, setElement] = useState<string>("arrow");
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element

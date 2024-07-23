@@ -34,13 +34,13 @@
 import { Server } from "socket.io";
 import crypto from "crypto";
 
-const io = new Server({
-  maxHttpBufferSize: 1e8,
-  pingTimeout: 6000,
-  cors: {
-    origin: ["https://drawboard10.web.app", "http://localhost:5173"],
-  },
-});
+  const io = new Server({
+    maxHttpBufferSize: 1e8,
+    pingTimeout: 600,
+    cors: {
+      origin: ["https://drawboard10.web.app", "http://localhost:5173"],
+    },
+  });
 
 io.listen(process.env.PORT || 4000);
 console.log("server io is running on 4000");

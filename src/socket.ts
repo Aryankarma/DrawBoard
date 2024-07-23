@@ -13,7 +13,7 @@ import { io, Socket } from "socket.io-client";
 const url = "https://drawboardserverfb.onrender.com";
 
 export const socket: Socket = io(url, {
-  transports: ["polling"],
+  // transports: ["polling"],
 });
 
 // Log the initial connection transport

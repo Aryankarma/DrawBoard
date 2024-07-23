@@ -23,7 +23,7 @@ const Secured = () => {
   const [mouseDown, setMouseDown] = useState<[number, number]>([0, 0]);
   const [mouseMove, setMouseMove] = useState<[number, number]>([0, 0]);
   const [strokeColor, setcolorHex] = useState<string>("#ffffff");
-  const [fillColor, setfillColor] = useState<string>("#000");
+  const [fillColor, setfillColor] = useState<string>("#000000");
   const [strokeWidth, setstrokeWidth] = useState<string>("1");
   const [elementName, setElement] = useState<string>("arrow");
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element
@@ -380,7 +380,8 @@ const Secured = () => {
   const shapeOptions: Options = {
     stroke: strokeColor,
     strokeWidth: Number(strokeWidth),
-    fill: fillColor + "50",
+    fill: fillColor,
+    // fill: fillColor + "50",
     roughness: 1,
     curveStepCount: 99,
     bowing: 1,

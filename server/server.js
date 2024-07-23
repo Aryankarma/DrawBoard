@@ -36,7 +36,7 @@ import crypto from "crypto";
 
 const io = new Server({
   maxHttpBufferSize: 1e8,
-  transports: ['polling'],
+  // transports: ['polling'],
   pingTimeout: 10000, // can decrease this ping timeout if we can decrease the latency 
   cors: {
     origin: ["https://drawboard10.web.app", "http://localhost:5173"],

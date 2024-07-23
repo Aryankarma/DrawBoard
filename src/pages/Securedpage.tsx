@@ -733,7 +733,7 @@ const Secured = () => {
 
       <div className="canvasContainer">
         <canvas
-          className="shadow-lg mt-3 mb-5 rounded-3"
+          className="shadow-lg mb-5 rounded-3"
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
@@ -744,7 +744,7 @@ const Secured = () => {
 
         <canvas // send bg color
           ref={backgroundCanvasRef}
-          // className="shadow-lg mt-3 mb-5 rounded-3"
+          // className="shadow-lg mb-5 rounded-3"
           width={window.innerWidth}
           height={window.innerHeight}
         />

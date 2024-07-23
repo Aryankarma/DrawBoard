@@ -36,6 +36,7 @@ import crypto from "crypto";
 
   const io = new Server({
     maxHttpBufferSize: 1e8,
+    transports: ['websocket'],
     pingTimeout: 600,
     cors: {
       origin: ["https://drawboard10.web.app", "http://localhost:5173"],

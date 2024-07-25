@@ -103,9 +103,21 @@ const Secured = () => {
     console.log(joinedRoomName);
   }, [joinedRoomName]);
 
+
+  const logDataSize = (ultimateContext: any) => {
+    const jsonString = JSON.stringify(ultimateContext);
+    const sizeInBytes = new Blob([jsonString]).size;
+    const sizeInKB = sizeInBytes / 1024;
+    console.log(`Received ultimateContext size: ${sizeInKB.toFixed(2)} KB`);
+  };
+
+
   // recieving data from the server
   useEffect(() => {
     socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
+
+      logDataSize(ultimateContext);
+
       ultimateContext != null ? setContextData(ultimateContext) : null;
 
       if (ultimateNumber == -10000) {

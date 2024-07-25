@@ -11,8 +11,9 @@
 import { io, Socket } from "socket.io-client";
 
 const url = "https://drawboardserverfb.onrender.com";
+const url2 = "https://drawboard1-production.up.railway.app/";
 
-export const socket: Socket = io(url, {
+export const socket: Socket = io(url2, {
   reconnectionDelay: 1000,
   reconnection: true,
   reconnectionAttempts: 10,
@@ -21,6 +22,7 @@ export const socket: Socket = io(url, {
   upgrade: false,
   rejectUnauthorized: false,
 });
+
 
 // Log the initial connection transport
 socket.on("connect", () => {

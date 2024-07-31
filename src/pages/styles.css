@@ -86,7 +86,7 @@ canvas{
 .canvasContainer canvas:nth-child(1){
     position: absolute;
     top: 0;
-    z-index: 52;
+    z-index: 3;
 }
 .canvasContainer canvas:nth-child(2){
     position: absolute;

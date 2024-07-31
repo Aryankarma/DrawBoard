@@ -1,21 +1,34 @@
 import { useRef, useState, useEffect } from "react";
 import "./styles.css";
 import rough from "roughjs";
-import { socket } from "../socket.ts";
 import { Options } from "roughjs/bin/core";
 import { LuBrush } from "react-icons/lu";
+import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { FiDownload, FiMinus, FiMousePointer, FiSquare } from "react-icons/fi";
 import { FaRegCircle } from "react-icons/fa6";
 import { GrPowerReset } from "react-icons/gr";
 import { LuUndo2 } from "react-icons/lu";
 import { LuRedo2 } from "react-icons/lu";
-import { MdGroups, MdOutlineGroupAdd } from "react-icons/md";
-// import { IoColorPaletteOutline } from "react-icons/io5";
-import CreateRoomPopup from "../components/createRoomPopup.tsx";
+import { LuHistory } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebaseConfig.ts";
+import { auth, db } from "../firebaseConfig.ts";
+import { IoMdMore } from "react-icons/io";
+import { GrNewWindow } from "react-icons/gr";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  setDoc,
+  addDoc,
+  query,
+  where,
+  getFirestore,
+} from "firebase/firestore";
 import ColorPicker from "../components/ColorPicker.tsx";
+import HistoryPanel from "../components/Modal.tsx";
+import { OverlayInjectedProps } from "react-bootstrap/esm/Overlay";
 
 const Secured = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -34,20 +47,24 @@ const Secured = () => {
   const [onBoard, setOnBoard] = useState(false);
 
   const [contextData, setContextData] = useState<string[][]>([]);
-  const [latestContext, setLatestContext] = useState<string[][]>([]);
   const [isContextDataUpdated, setIsContextDataUpdated] = useState(false);
 
   // const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(-1);
-
-  // const [rerender, setrerender] = useState<number>(0);
-  const [popupStatus, setPopupStatus] = useState<boolean>(false);
-  const [joinedRoomName, setJoinedRoomName] = useState("");
-  const [inRoom, setInRoom] = useState(false);
+  const [sessionName, setSessionName] = useState("");
+  const [historyPopup, setHistoryPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<String[]>([]);
 
   // auth
   const [_, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
+  // setup user drawing history
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [drawings, setDrawings] = useState<[]>([]);
+  const [datesData, setDatesData] = useState<String[]>([]);
+  const [sessionData, setSessionData] = useState<String[][]>([]);
 
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -65,104 +82,62 @@ const Secured = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // useEffect(() => {
-  // if (!userlocal) {
-  //   return <h1>Loading...</h1>
-  // }
-  // }, [userlocal]);
-
-  // sending data from client to server
-  const sendDataToPeer = (contextData: string[][], canvasPointer: number) => {
-    // if (isInitialMount.current) {
-    //   isInitialMount.current = false;
-    //   setContextData([]);
-    //   return; // Skip the first execution
-    // }
-
-    {
-      joinedRoomName != ""
-        ? socket.emit(
-            "ultimateSharing",
-            contextData,
-            canvasPointer ? canvasPointer : -10000,
-            joinedRoomName
-          )
-        : socket.emit(
-            "ultimateSharing",
-            contextData,
-            canvasPointer ? canvasPointer : -10000
-          );
+  const generateNewSession = async () => {
+    const { time, date } = getFormattedDateTime(false);
+    const generatedName = "Session " + time;
+    // check if a session already exists as generate name
+    const currentdata = await getSessionData([date]);
+    if (currentdata.some((input) => input.includes(generatedName))) {
+      const { time, date } = getFormattedDateTime(true);
+      const generatedName = "Session " + time;
+      setSessionName(generatedName);
+      return;
     }
-  };
-
-  const leaveRoom = (roomName: string) => {
-    socket.emit("leaveRoom", roomName);
-  };
-
-  useEffect(() => {
-    console.log(joinedRoomName);
-  }, [joinedRoomName]);
-
-
-  const logDataSize = (ultimateContext: any) => {
-    const jsonString = JSON.stringify(ultimateContext);
-    const sizeInBytes = new Blob([jsonString]).size;
-    const sizeInKB = sizeInBytes / 1024;
-    console.log(`Received ultimateContext size: ${sizeInKB.toFixed(2)} KB`);
+    setSessionName(generatedName);
   };
 
 
-  // recieving data from the server
-  useEffect(() => {
-    socket.on("ultimateSharing", (ultimateContext, ultimateNumber) => {
+  const renderTooltip = (props: OverlayInjectedProps, text: string) => (
+    <Tooltip id="button-tooltip" {...props}>
+      {text}
+    </Tooltip>
+  );
 
-      logDataSize(ultimateContext);
+  // format date and time function
+  function getFormattedDateTime(incrementMinute: boolean) {
+    const now = new Date();
+    const day = now.getDate();
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "March",
+      "April",
+      "May",
+      "Jun",
+      "July",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
 
-      ultimateContext != null ? setContextData(ultimateContext) : null;
+    const hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const minutesplusone = (now.getMinutes() + 1).toString().padStart(2, "0");
+    const seconds = now.getSeconds();
 
-      if (ultimateNumber == -10000) {
-        resetPeerContext();
-      }
-      if (ultimateContext[ultimateNumber - 1][0]) {
-        // when the reDrawCanvasUpdateContext runs after reDrawCanvasForUndoRedo undo does not work, this timeout is keeping it to execute that function before reDrawCanvasForUndoRedo
-        setTimeout(() => {
-          reDrawCanvasForUndoRedo(ultimateContext[ultimateNumber - 1][0]);
-        }, 10);
-      }
-    });
+    const date = `${day} ${month} ${year}`;
+    let time = `${hours}:${minutes}`;
 
-    return () => {
-      socket.off("ultimateSharing");
-    };
-  }, []);
+    if (incrementMinute) {
+      time = `${hours}:${minutesplusone}`;
+    }
 
-  useEffect(() => {
-    socket.on("roomCreated", (msg) => {
-      alert(msg);
-    });
-
-    socket.on("roomJoined", (msg, roomName) => {
-      alert(msg);
-      setJoinedRoomName(roomName);
-      setInRoom(true);
-    });
-
-    socket.on("roomError", (msg) => {
-      alert("Error: " + msg);
-    });
-
-    socket.on("roomLeft", (msg) => {
-      alert(msg);
-      setInRoom(false);
-    });
-
-    return () => {
-      socket.off("roomCreated");
-      socket.off("roomJoined");
-      socket.off("roomError");
-      socket.off("roomLeft");
-    };
-  });
+    return { date, time };
+  }
 
   const resetPeerContext = () => {
     if (backgroundCanvasRef.current) {
@@ -182,11 +157,144 @@ const Secured = () => {
     setPathdataHistory([]);
   };
 
+  // send data to firebase storage
+  function sendDataToFirebase(data: object) {
+    const uid = auth.currentUser?.uid;
+
+    let { date, time } = getFormattedDateTime(false);
+    let dbUrl = ``;
+
+    if (!sessionName) {
+      dbUrl = `${uid}/${date}/Sessions/${"Session " + time}`; // first session
+      setDoc(doc(db, `${uid}/${date}/`), { f: "v" }); // adding some temp data to make the document queryable, will'be ignored while fetching data
+      setSessionName("Session " + time);
+    } else {
+      dbUrl = `${uid}/${date}/Sessions/${sessionName}`; // later sessions
+    }
+
+    const userDocRef = doc(db, dbUrl);
+
+    setDoc(userDocRef, { dataArray: data })
+      .then(() => {
+        console.log("Document successfully written!");
+      })
+      .catch((error) => {
+        console.error("Error writing document: ", error);
+      });
+  }
+
+  // type for data object
+  type DataObject = {
+    [key: number]: string;
+  };
+
+  const convertArrayToObj = (input: string[][]) => {
+    const dataObject: DataObject = input.reduce(
+      (acc: DataObject, curr: string[], index: number) => {
+        acc[index] = curr[0];
+        return acc;
+      },
+      {}
+    );
+
+    return dataObject;
+  };
+
   useEffect(() => {
+    // send data to firestore db);
+    if (auth.currentUser) {
+      const contextObj = convertArrayToObj(contextData);
+      sendDataToFirebase(contextObj);
+    } else {
+      // // console.log("auth not available");
+    }
     setCurrentCanvasPointer(contextData.length - 1);
-    setLatestContext([...contextData]);
     reDrawCanvasUpdateContext();
   }, [contextData]);
+
+  const getDatesData = async () => {
+    const uid = auth.currentUser?.uid;
+
+    // get all documents in a collection
+    let tempDatesData: String[] = [];
+
+    const queryToGetAllDatesData = await getDocs(collection(db, `${uid}/`));
+
+    queryToGetAllDatesData.forEach((input) => {
+      tempDatesData = [...tempDatesData, input.id];
+    });
+
+    setDatesData(tempDatesData);
+    getSessionData(tempDatesData);
+  };
+
+  // useEffect(() => {
+  //   console.log('session data updated', sessionData)
+  // },[sessionData])
+
+  const getSessionData = async (tempDatesData: String[]) => {
+    console.log("getting session data");
+    const uid = auth.currentUser?.uid;
+
+    let tempSessionData: string[][] = [];
+
+    // Use Promise.all to wait for all async operations to complete
+    await Promise.all(
+      tempDatesData.map(async (input, index) => {
+        const queryToGetAllSessionData = await getDocs(
+          collection(db, `${uid}/${input}/Sessions`)
+        );
+
+        // Initialize the sub-array if it doesn't exist
+        if (!tempSessionData[index]) {
+          tempSessionData[index] = [];
+        }
+
+        queryToGetAllSessionData.forEach((doc) => {
+          tempSessionData[index].push(doc.id);
+        });
+      })
+    );
+
+    setSessionData(tempSessionData);
+    setIsLoading(false);
+
+    return tempSessionData;
+  };
+
+  // recieve data from firebase
+  useEffect(() => {
+    if (datesData.length == 0) {
+      // optional - isHistoryOpen as condition => leads to more read req
+      setIsLoading(true);
+      getDatesData();
+    }
+  }, [isHistoryOpen]);
+
+  const handleSelectSession = async (sessionName: String[]) => {
+    setSelectedSession(sessionName);
+    // // console.log("Selected session:", sessionName);
+    const uid = auth.currentUser?.uid;
+    const getDrawing = await getDoc(
+      doc(db, `${uid}/${selectedSession[0]}/Sessions/${selectedSession[1]}`)
+    );
+
+    const originalData = getDrawing.data();
+    // console.log(getDrawing.data())
+    // Create a new array to hold the transformed data
+    const transformedData = [];
+
+    // Iterate through the original data and create new arrays
+    if (originalData) {
+      for (let i = 0; i < Object.keys(originalData.dataArray).length; i++) {
+        transformedData.push([originalData.dataArray[i]]);
+      }
+    }
+
+    // console.log(transformedData);
+    setContextData(transformedData);
+    setIsHistoryOpen(false);
+  };
 
   const reDrawCanvasUpdateContext = () => {
     if (backgroundCanvasRef.current) {
@@ -237,39 +345,9 @@ const Secured = () => {
     }
   }, [onBoard]);
 
-  // useEffect(() => {
-  // console.log(currentCanvasPointer)
-  // }, [currentCanvasPointer]);
-
-  // const saveCanvasContext = () => {
-  //   if (canvasRef.current) {
-  //     const context = canvasRef.current.getContext("2d");
-  //     if (context) {
-  //       setContextData((prevdata) => [
-  //         ...prevdata,
-  //         [canvasRef.current!.toDataURL()],
-  //       ]);
-  //     }
-  //   }
-  // };
-
-  // const savebgCanvasContext = async () => {
-  //   if (backgroundCanvasRef.current) {
-  //     const context = backgroundCanvasRef.current.getContext("2d");
-  //     if (context) {
-  //       setContextData((prevdata) => [
-  //         ...prevdata,
-  //         [backgroundCanvasRef.current!.toDataURL()],
-  //       ]);
-  //     }
-  //   }
-  //   sendDataToPeer(contextData, currentCanvasPointer);
-  // };
-
   // fixes drawing last element except current one...
   useEffect(() => {
     if (isContextDataUpdated) {
-      sendDataToPeer(contextData, currentCanvasPointer + 1);
       setIsContextDataUpdated(false);
     }
   }, [isContextDataUpdated, contextData, currentCanvasPointer]);
@@ -313,7 +391,6 @@ const Secured = () => {
         }
         image.src = contextData[currentCanvasPointer - 1][0];
         setCurrentCanvasPointer(currentCanvasPointer - 1);
-        sendDataToPeer(latestContext, currentCanvasPointer);
       }
     }
   };
@@ -340,7 +417,6 @@ const Secured = () => {
 
         image.src = contextData[currentCanvasPointer + 1][0];
         setCurrentCanvasPointer(currentCanvasPointer + 1);
-        sendDataToPeer(latestContext, currentCanvasPointer + 2);
       }
     }
   };
@@ -448,7 +524,6 @@ const Secured = () => {
     setpathdata([]);
     setPathdataHistory([]);
     savebgCanvasContext();
-    sendDataToPeer(contextData, -10000);
   };
 
   const generateLinearPath = (maindata: number[][]) => {
@@ -506,10 +581,24 @@ const Secured = () => {
       case "circle":
         shapeToDraw = circle1;
         break;
+      case "text":
+        // generateText(100, 150, "I'm Aryan Karma");
+        break;
     }
 
     roughCanvas.draw(shapeToDraw);
   };
+
+  // function generateText(x: number, y: number, text: string) {
+  //   if (backgroundCanvasRef.current) {
+  //     let ctx = backgroundCanvasRef.current.getContext("2d");
+  //     if (ctx != null) {
+  //       ctx.font = "48px serif";
+  //       ctx.fillStyle = "white"
+  //       ctx.fillText(text, x, y);
+  //     }
+  //   }
+  // }
 
   const handleDownloadBgCanvas = () => {
     if (canvasRef.current) {
@@ -587,12 +676,6 @@ const Secured = () => {
 
   return (
     <div className="vw-100 vh-100 overflow-hidden d-flex justify-content-center align-items-center flex-column ">
-      <CreateRoomPopup
-        status={popupStatus}
-        onClose={() => setPopupStatus(!popupStatus)}
-        setInRoomFunc={() => setInRoom(false)}
-      />
-
       <div className="toolsContainer vw-100 p-2 mt-3">
         <div className="colorBox">
           <div className="tagContainer">
@@ -686,6 +769,26 @@ const Secured = () => {
                 <FaRegCircle />{" "}
               </label>
             </div>
+
+            {/* <div className="boxcontainer">
+              <input
+                name="element"
+                className="checkTag"
+                id="text"
+                type="radio"
+                onClick={() => setElement("text")}
+              />
+              <label
+                style={{
+                  backgroundColor: "rgb(213, 230, 253)",
+                  padding: ".5rem 1.25rem",
+                }}
+                className="thisislabel"
+                htmlFor="text"
+              >
+                T
+              </label>
+            </div> */}
           </div>
         </div>
 
@@ -710,39 +813,90 @@ const Secured = () => {
         </div>
 
         <div style={{ scale: ".85" }}>
-          {/* create room btn */}
-          <button
-            className="ms-1 me-1 rounded-5 "
-            onClick={() =>
-              inRoom ? leaveRoom(joinedRoomName) : setPopupStatus(!popupStatus)
-            }
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "Reset Canvas")}
           >
-            {!inRoom ? <MdOutlineGroupAdd /> : <MdGroups />}
-          </button>
+            <button
+              className="ms-1 me-1 rounded-5 "
+              onClick={() => resetCanvasWithBtn()}
+            >
+              <GrPowerReset />
+            </button>
+          </OverlayTrigger>
 
-          <button
-            className="ms-1 me-1 rounded-5 "
-            onClick={() => resetCanvasWithBtn()}
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "Undo")}
           >
-            <GrPowerReset />
-          </button>
-          <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}>
-            <LuUndo2 />
-          </button>
-          <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}>
-            <LuRedo2 />
-          </button>
-          <button
-            className="ms-1 me-1 rounded-5"
-            onClick={handleDownloadBgCanvas}
+            <button className="ms-1 me-1 rounded-5" onClick={undoCanvasContext}>
+              <LuUndo2 />
+            </button>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "Redo")}
           >
-            <FiDownload />
-          </button>
-          {/* <button className="btntemp ms-1 me-1 rounded-5">
-            <p style={{margin:"0"}}>{joinedRoomName != "" ? joinedRoomName : 0 }</p>
-          </button> */}
+            <button className="ms-1 me-1 rounded-5" onClick={redoCanvasContext}>
+              <LuRedo2 />
+            </button>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "Show History")}
+          >
+            <button
+              className="ms-1 me-1 rounded-5"
+              onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            >
+              <LuHistory />
+            </button>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "Download Canvas")}
+          >
+            <button
+              className="ms-1 me-1 rounded-5"
+              onClick={handleDownloadBgCanvas}
+            >
+              <FiDownload />
+            </button>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 200, hide: 200 }}
+            overlay={(props) => renderTooltip(props, "New Canvas")}
+          >
+            <button
+              className="ms-1 me-1 rounded-5"
+              onClick={() => {
+                resetCanvasWithBtn();
+                generateNewSession();
+              }}
+            >
+              <GrNewWindow />
+            </button>
+          </OverlayTrigger>
         </div>
       </div>
+
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        datesData={datesData}
+        sessionData={sessionData}
+        isLoading={isLoading}
+        onSelectSession={handleSelectSession}
+      />
 
       <div className="canvasContainer">
         <canvas
@@ -757,6 +911,7 @@ const Secured = () => {
 
         <canvas // send bg color
           ref={backgroundCanvasRef}
+          id="bgCanvas"
           // className="shadow-lg mb-5 rounded-3"
           width={window.innerWidth}
           height={window.innerHeight}
@@ -767,16 +922,3 @@ const Secured = () => {
 };
 
 export default Secured;
-
-/*
-
-use this func to write text on canvas
-function draw() {
-  const ctx = document.getElementById("canvas").getContext("2d");
-  ctx.font = "48px serif";
-  ctx.fillText("Hello world", 10, 50);
-}
-
-draw();
-
-*/

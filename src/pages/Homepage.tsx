@@ -14,8 +14,6 @@ import {
 import ErrorMessage from "../components/ErrorMessage";
 import "./styles.css";
 
-// Ensure you have the .env file at the root of your project with correct values
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_ApiKey,
   authDomain: import.meta.env.VITE_authDomain,
@@ -31,9 +29,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 auth.useDeviceLanguage();
-// provider.setCustomParameters({
-//   login_hint: "user@example.com",
-// });
 
 const Home = () => {
   const [email, setEmail] = useState("");
@@ -81,18 +76,6 @@ const Home = () => {
         console.log(errorCode, errorMessage);
       });
   }, [authState]);
-
-  // const googleSignout = ()=> {
-  //   signOut(auth)
-  //     .then(() => {
-  //       console.log("sign out done");
-  //       // as auth state has now changed
-  //       setAuthState(auth);
-  //     })
-  //       .catch((error) => {
-  //         console.error(error)
-  //       });
-  // }
 
   const handleSignup = () => {
     createUserWithEmailAndPassword(auth, email, pass)

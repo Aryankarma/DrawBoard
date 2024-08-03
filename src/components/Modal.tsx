@@ -65,4 +65,3 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 };
 
 export default HistoryPanel;
- 

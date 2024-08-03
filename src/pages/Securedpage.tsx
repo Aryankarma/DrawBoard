@@ -39,6 +39,8 @@ const Secured = () => {
   const [fillColor, setfillColor] = useState<string>("#000000");
   const [strokeWidth, setstrokeWidth] = useState<string>("1");
   const [elementName, setElement] = useState<string>("arrow");
+  const [text, setText] = useState("");
+  const [textWidth, setTextWidth] = useState(text.length);
   // const elementRef = useRef<HTMLLabelElement>(null); // Ref to hold the element
 
   const [pathdata, setpathdata] = useState<number[][]>([]);
@@ -49,7 +51,6 @@ const Secured = () => {
   const [contextData, setContextData] = useState<string[][]>([]);
   const [isContextDataUpdated, setIsContextDataUpdated] = useState(false);
 
-  // const [tempcontext, settempcontext] = useState<string[]>([]);
   const [currentCanvasPointer, setCurrentCanvasPointer] = useState<number>(-1);
   const [sessionName, setSessionName] = useState("");
   const [historyPopup, setHistoryPopup] = useState(false);
@@ -96,7 +97,6 @@ const Secured = () => {
     setSessionName(generatedName);
   };
 
-
   const renderTooltip = (props: OverlayInjectedProps, text: string) => (
     <Tooltip id="button-tooltip" {...props}>
       {text}
@@ -104,7 +104,7 @@ const Secured = () => {
   );
 
   // format date and time function
-  function getFormattedDateTime(incrementMinute: boolean) {
+  const getFormattedDateTime = (incrementMinute: boolean) => {
     const now = new Date();
     const day = now.getDate();
     const monthNames = [
@@ -158,7 +158,7 @@ const Secured = () => {
   };
 
   // send data to firebase storage
-  function sendDataToFirebase(data: object) {
+  const sendDataToFirebase = (data: object) => {
     const uid = auth.currentUser?.uid;
 
     let { date, time } = getFormattedDateTime(false);
@@ -176,7 +176,7 @@ const Secured = () => {
 
     setDoc(userDocRef, { dataArray: data })
       .then(() => {
-        console.log("Document successfully written!");
+        // console.log("Document successfully written!");
       })
       .catch((error) => {
         console.error("Error writing document: ", error);
@@ -204,7 +204,7 @@ const Secured = () => {
     // send data to firestore db);
     if (auth.currentUser) {
       const contextObj = convertArrayToObj(contextData);
-      sendDataToFirebase(contextObj);
+      // sendDataToFirebase(contextObj);u
     } else {
       // // console.log("auth not available");
     }
@@ -227,10 +227,6 @@ const Secured = () => {
     setDatesData(tempDatesData);
     getSessionData(tempDatesData);
   };
-
-  // useEffect(() => {
-  //   console.log('session data updated', sessionData)
-  // },[sessionData])
 
   const getSessionData = async (tempDatesData: String[]) => {
     console.log("getting session data");
@@ -474,7 +470,8 @@ const Secured = () => {
     curveStepCount: 99,
     bowing: 1,
     curveFitting: 0.99,
-    curveTightness: 0.8,
+    // curveTightness: 0.8,
+    curveTightness: 1,
     dashGap: -1,
     dashOffset: -1,
     disableMultiStroke: true,
@@ -569,7 +566,7 @@ const Secured = () => {
       shapeOptions
     );
 
-    let shapeToDraw = rect1;
+    let shapeToDraw;
 
     switch (elementName) {
       case "line":
@@ -582,23 +579,55 @@ const Secured = () => {
         shapeToDraw = circle1;
         break;
       case "text":
-        // generateText(100, 150, "I'm Aryan Karma");
+        generateText(mouseDown[0], mouseDown[1], text);
         break;
     }
 
-    roughCanvas.draw(shapeToDraw);
+    shapeToDraw ? roughCanvas.draw(shapeToDraw) : null;
   };
 
-  // function generateText(x: number, y: number, text: string) {
-  //   if (backgroundCanvasRef.current) {
-  //     let ctx = backgroundCanvasRef.current.getContext("2d");
-  //     if (ctx != null) {
-  //       ctx.font = "48px serif";
-  //       ctx.fillStyle = "white"
-  //       ctx.fillText(text, x, y);
-  //     }
-  //   }
-  // }
+  useEffect(() => {
+    if (elementName == "text") {
+      const handleKeyPress = (event: KeyboardEvent) => {
+        if (event.key === "Backspace") {
+            setText((prevText) => prevText.slice(0, -1));
+        } else if (event.key.length === 1) {
+          setText((prevText) => prevText + event.key);
+        }
+      };
+
+      document.body.addEventListener("keydown", handleKeyPress);
+
+      return () => {
+        document.body.removeEventListener("keydown", handleKeyPress);
+      };
+    }
+  }, [elementName]);
+
+  useEffect(() => {
+    generateText(mouseDown[0], mouseDown[1], text);
+    setTextWidth(text.length)
+  }, [text]);
+
+  useEffect(() => {
+    setText("")
+    setTextWidth(0)
+  }, [mouseDown]);
+
+  const generateText = (x: number, y: number, text: string) => {
+    if (backgroundCanvasRef.current) {
+      let ctx = backgroundCanvasRef.current.getContext("2d");
+      if (ctx != null) {
+        ctx.clearRect(x - (textWidth * 12) / 2, y - 20, textWidth * 12, 40);
+        ctx.font = "italic 18px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = strokeColor;
+        ctx.fillText(text, x, y);
+      }
+    }
+  }
+
 
   const handleDownloadBgCanvas = () => {
     if (canvasRef.current) {
@@ -770,7 +799,7 @@ const Secured = () => {
               </label>
             </div>
 
-            {/* <div className="boxcontainer">
+            <div className="boxcontainer">
               <input
                 name="element"
                 className="checkTag"
@@ -788,7 +817,7 @@ const Secured = () => {
               >
                 T
               </label>
-            </div> */}
+            </div>
           </div>
         </div>
 
